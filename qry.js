@@ -252,8 +252,9 @@ class Qry {
 
     // Create new element
     create(tag, props = {}) {
-        const element = this.#doc.createElement(tag);
-        const qry = new Qry(element, this.#doc);
+        const doc = this.#doc || document; // Use document as fallback
+        const element = doc.createElement(tag);
+        const qry = new Qry(element, doc);
 
         // Apply properties
         Object.entries(props).forEach(([key, value]) => {
@@ -270,6 +271,7 @@ class Qry {
 
         return qry;
     }
+
 
     // Enable/disable
     enable(state = true) {
