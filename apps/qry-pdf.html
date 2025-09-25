@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Qry PDF</title>
+    <link rel="icon" type="image/svg+xml" href="./qry-logo-white.svg">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unifr: "#005395",
+                        dark: { 100: "#0a0a0a", 200: "#1a1a1a", 300: "#2d2d30" }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn { @apply p-2 rounded-lg text-gray-400 hover:text-white hover:bg-dark-300/50 transition-colors; }
+            .card { @apply bg-dark-200/95 border border-dark-300 rounded-xl p-6 backdrop-blur-sm; }
+            .drop-zone { @apply border-2 border-dashed border-dark-300 bg-dark-100 transition-colors; }
+            .drop-zone.active { @apply border-unifr bg-unifr/5; }
+            .nav { @apply fixed bottom-6 left-1/2 -translate-x-1/2 bg-dark-200/95 border border-dark-300 rounded-lg backdrop-blur-sm px-6 py-3 flex items-center gap-4 transition-all; }
+        }
+
+        /* Big triangular cursor */
+        html, body, *, *::before, *::after {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' fill='%23ffffff' stroke='%23000000' stroke-width='1.5'/%3E%3C/svg%3E") 4 4, auto !important;
+        }
+
+        button, a, input, [role="button"], .btn,
+        button:hover, a:hover, input:hover, [role="button"]:hover, .btn:hover {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' fill='%23ffffff' stroke='%23000000' stroke-width='1.5'/%3E%3C/svg%3E") 4 4, pointer !important;
+        }
+
+        div, span, canvas, nav, section, button, input {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' fill='%23ffffff' stroke='%23000000' stroke-width='1.5'/%3E%3C/svg%3E") 4 4, auto !important;
+        }
+
+        /* Unifr blue cursor trail */
+        .cursor-trail {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #005395;
+            border: 1px solid rgba(0, 83, 149, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            box-shadow: 0 0 8px rgba(0, 83, 149, 0.4);
+        }
+
+        .cursor-trail.fade-out {
+            opacity: 0 !important;
+            transform: scale(0.2) !important;
+        }
+
+        /* Click ripple effect */
+        .click-ripple {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #005395;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.8;
+            animation: ripple 0.6s ease-out forwards;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        .pdf-slide {
+            scroll-snap-align: start;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Dark scrollbar for PDF container */
+        .pdf-container {
+            scroll-snap-type: y mandatory;
+            scrollbar-width: thin;
+            scrollbar-color: #3e3e42 #1a1a1a;
+        }
+
+        .pdf-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pdf-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .pdf-container::-webkit-scrollbar-thumb {
+            background: #3e3e42;
+            border-radius: 4px;
+        }
+
+        .pdf-container::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+    </style>
+
+    <!-- Dependencies -->
+    <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body class="bg-dark-100 text-gray-100 min-h-screen antialiased select-none">
+<!-- Drop Zone -->
+<div id="drop-zone" class="drop-zone fixed inset-0 flex items-center justify-center">
+    <div class="text-center max-w-md">
+        <div class="w-20 h-20 mx-auto mb-6 bg-dark-300 rounded-xl flex items-center justify-center">
+            <i data-lucide="file-text" class="w-10 h-10 text-gray-400"></i>
+        </div>
+        <h1 class="text-3xl font-light mb-2">Qry PDF</h1>
+        <p class="text-gray-400 text-lg mb-8">Drop PDF or click to browse</p>
+        <button id="browse-btn" class="bg-unifr hover:bg-unifr/90 text-white px-6 py-3 rounded-lg transition-colors">
+            Browse Files
+        </button>
+    </div>
+</div>
+
+<!-- PDF Container -->
+<div id="pdf-container" class="pdf-container hidden h-screen overflow-y-auto overflow-x-hidden bg-gray-900"></div>
+
+<!-- Navigation -->
+<nav id="navigation" class="nav hidden">
+    <button id="prev-btn" class="btn" title="Previous">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+    </button>
+    <span id="page-info" class="text-gray-300 font-mono text-sm px-3 py-1 bg-dark-300 rounded">1/1</span>
+    <button id="next-btn" class="btn" title="Next">
+        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+    </button>
+    <div class="w-px h-5 bg-gray-600"></div>
+    <button id="fullscreen-btn" class="btn" title="Fullscreen">
+        <i data-lucide="maximize" class="w-5 h-5"></i>
+    </button>
+    <button id="load-btn" class="btn" title="Load PDF">
+        <i data-lucide="folder-open" class="w-5 h-5"></i>
+    </button>
+</nav>
+
+<!-- Loading -->
+<div id="loading" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div class="card text-center">
+        <div class="w-8 h-8 border-2 border-gray-600 border-t-unifr rounded-full mx-auto mb-4 spin"></div>
+        <p class="text-gray-300">Loading PDF...</p>
+    </div>
+</div>
+
+<input type="file" id="file-input" accept=".pdf" class="hidden">
+
+<script type="module">
+    import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js';
+    import { QryApp } from './QryApp.js';
+
+    class QryPDF extends QryApp {
+        #pdf = null;
+        #currentPage = 0;
+        #totalPages = 0;
+        #isRendering = false;
+        #hideTimer = null;
+        #showNav = null;
+
+        constructor() {
+            super({ title: 'Qry PDF', logLevel: 'warn' });
+            this.#init();
+            this.#setupCursorEffects();
+        }
+
+        #init() {
+            this.#setupEvents();
+            this.#setupDragDrop();
+            this.#setupAutoHide();
+            this.refreshIcons();
+        }
+
+        #setupEvents() {
+            this.bindAll({
+                '#browse-btn': () => $('#file-input').el.click(),
+                '#load-btn': () => $('#file-input').el.click(),
+                '#prev-btn': () => this.#navigate(-1),
+                '#next-btn': () => this.#navigate(1),
+                '#fullscreen-btn': () => this.#toggleFullscreen()
+            });
+
+            document.getElementById('file-input').addEventListener('change', (e) => {
+                this.#loadFile(e);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (this.#isRendering) return;
+                const actions = {
+                    'ArrowUp': () => this.#navigate(-1),
+                    'ArrowDown': () => this.#navigate(1),
+                    'ArrowLeft': () => this.#navigate(-1),
+                    'ArrowRight': () => this.#navigate(1),
+                    'f': () => this.#toggleFullscreen(),
+                    'Escape': () => document.fullscreenElement && document.exitFullscreen()
+                };
+                if (actions[e.key]) {
+                    e.preventDefault();
+                    actions[e.key]();
+                    this.#showNav();
+                }
+            });
+
+            document.addEventListener('wheel', (e) => {
+                if (this.#pdf) {
+                    e.preventDefault();
+                    this.#navigate(e.deltaY > 0 ? 1 : -1);
+                    this.#showNav();
+                }
+            }, { passive: false });
+
+            document.addEventListener('fullscreenchange', () => {
+                const icon = $('#fullscreen-btn [data-lucide]');
+                icon.attr('data-lucide', document.fullscreenElement ? 'minimize' : 'maximize');
+                this.refreshIcons();
+                if (this.#pdf) setTimeout(() => this.#renderAll(), 100);
+            });
+
+            window.addEventListener('resize', () => {
+                if (this.#pdf) {
+                    clearTimeout(this.resizeTimer);
+                    this.resizeTimer = setTimeout(() => this.#renderAll(), 300);
+                }
+            });
+        }
+
+        #setupDragDrop() {
+            const zone = $('#drop-zone');
+            zone.on('dragover', (e) => { e.preventDefault(); zone.cls('+active'); });
+            zone.on('dragleave', (e) => { if (!zone.el.contains(e.relatedTarget)) zone.cls('-active'); });
+            zone.on('drop', (e) => {
+                e.preventDefault();
+                zone.cls('-active');
+                const file = e.dataTransfer.files[0];
+                if (file?.type === 'application/pdf') this.#loadPDF(file);
+            });
+            zone.click(() => $('#file-input').el.click());
+        }
+
+        #setupAutoHide() {
+            const nav = $('#navigation');
+            this.#showNav = () => {
+                if (!this.#pdf) return;
+                nav.css({ opacity: '1', transform: 'translateX(-50%) translateY(0)' });
+                clearTimeout(this.#hideTimer);
+                this.#hideTimer = setTimeout(() =>
+                    nav.css({ opacity: '0', transform: 'translateX(-50%) translateY(10px)' }), 3000);
+            };
+
+            document.addEventListener('mousemove', (e) => {
+                if (e.clientY > window.innerHeight * 0.8) this.#showNav();
+            });
+            nav.on('mouseenter', () => { this.#showNav(); clearTimeout(this.#hideTimer); });
+            nav.on('mouseleave', () => this.#showNav());
+        }
+
+        #setupCursorEffects() {
+            const trailElements = [];
+            const trailLength = 6;
+            let mouseX = 0, mouseY = 0;
+            let lastMoveTime = Date.now();
+            let isMoving = false;
+
+            // Create trail elements
+            for (let i = 0; i < trailLength; i++) {
+                const trail = document.createElement('div');
+                trail.className = 'cursor-trail';
+
+                const opacity = (trailLength - i) / trailLength * 0.8;
+                const scale = 1 - i * 0.15;
+
+                trail.style.opacity = opacity;
+                trail.style.transform = `scale(${scale})`;
+                trail.style.background = `rgba(0, 83, 149, ${opacity})`;
+
+                document.body.appendChild(trail);
+                trailElements.push(trail);
+            }
+
+            const positions = Array(trailLength).fill().map(() => ({ x: 0, y: 0 }));
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                lastMoveTime = Date.now();
+
+                if (!isMoving) {
+                    isMoving = true;
+                    trailElements.forEach(trail => trail.classList.remove('fade-out'));
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                const ripple = document.createElement('div');
+                ripple.className = 'click-ripple';
+                ripple.style.left = e.clientX - 30 + 'px';
+                ripple.style.top = e.clientY - 30 + 'px';
+                document.body.appendChild(ripple);
+
+                setTimeout(() => ripple.remove(), 600);
+            });
+
+            const animateTrail = () => {
+                const now = Date.now();
+                const timeSinceMove = now - lastMoveTime;
+
+                // Hide trail after 1 second with slow fade animation
+                if (timeSinceMove > 1000 && isMoving) {
+                    isMoving = false;
+                    trailElements.forEach(trail => trail.classList.add('fade-out'));
+                }
+
+                // Only update positions if currently moving
+                if (isMoving) {
+                    positions[0] = { x: mouseX, y: mouseY };
+
+                    for (let i = 1; i < trailLength; i++) {
+                        positions[i].x += (positions[i - 1].x - positions[i].x) * 0.25;
+                        positions[i].y += (positions[i - 1].y - positions[i].y) * 0.25;
+                    }
+
+                    trailElements.forEach((element, i) => {
+                        element.style.left = positions[i].x - 5 + 'px';
+                        element.style.top = positions[i].y - 5 + 'px';
+                    });
+                }
+
+                requestAnimationFrame(animateTrail);
+            };
+
+            animateTrail();
+        }
+
+        #loadFile(e) {
+            const file = e.target.files[0];
+            if (file?.type === 'application/pdf') {
+                this.#loadPDF(file);
+            }
+            e.target.value = '';
+        }
+
+        async #loadPDF(file) {
+            if (this.#isRendering) return;
+            try {
+                $('#loading').cls('-hidden');
+                const buffer = await file.arrayBuffer();
+                this.#pdf = await pdfjsLib.getDocument(buffer).promise;
+                this.#totalPages = this.#pdf.numPages;
+                this.#currentPage = 0;
+                await this.#renderAll();
+                this.#showPDF();
+            } catch (error) {
+                this.error('Failed to load PDF');
+            } finally {
+                $('#loading').cls('+hidden');
+            }
+        }
+
+        async #renderAll() {
+            if (this.#isRendering) return;
+            this.#isRendering = true;
+            const container = $('#pdf-container');
+            container.html('');
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            for (let i = 1; i <= this.#totalPages; i++) {
+                const page = await this.#pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1 });
+
+                const scaleX = vw / viewport.width;
+                const scaleY = vh / viewport.height;
+                const scale = Math.min(scaleX, scaleY);
+
+                const finalViewport = page.getViewport({ scale });
+
+                const canvas = $.create('canvas', {
+                    class: 'mx-auto block shadow-2xl bg-white'
+                });
+                canvas.el.width = finalViewport.width;
+                canvas.el.height = finalViewport.height;
+
+                const slide = $.create('div', { class: 'pdf-slide' });
+                slide.append(canvas);
+                container.append(slide);
+
+                await page.render({
+                    canvasContext: canvas.el.getContext('2d'),
+                    viewport: finalViewport
+                }).promise;
+            }
+            this.#isRendering = false;
+        }
+
+        #navigate(dir) {
+            const newPage = Math.max(0, Math.min(this.#totalPages - 1, this.#currentPage + dir));
+            if (newPage !== this.#currentPage) {
+                this.#currentPage = newPage;
+                document.querySelectorAll('.pdf-slide')[newPage]?.scrollIntoView({ behavior: 'smooth' });
+                this.#updateNav();
+            }
+        }
+
+        #updateNav() {
+            $('#page-info').text(`${this.#currentPage + 1}/${this.#totalPages}`);
+            $('#prev-btn').attr('disabled', this.#currentPage === 0 ? true : null);
+            $('#next-btn').attr('disabled', this.#currentPage === this.#totalPages - 1 ? true : null);
+        }
+
+        #toggleFullscreen() {
+            const container = $('#pdf-container');
+            if (!document.fullscreenElement) {
+                container.el.requestFullscreen?.();
+            } else {
+                document.exitFullscreen?.();
+            }
+        }
+
+        #showPDF() {
+            $('#drop-zone').cls('+hidden');
+            $('#pdf-container').cls('-hidden');
+            $('#navigation').cls('-hidden');
+            this.#updateNav();
+            this.#showNav();
+        }
+    }
+
+    $.ready(() => new QryPDF());
+</script>
+</body>
+</html>

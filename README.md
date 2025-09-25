@@ -33,20 +33,23 @@ $('#button').click(() => {
 
 ### CDN (Recommended)
 ```html
-<script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js"></script>
 ```
 
 ### ES Modules
+
 ```javascript
-import $ from './qry.js';
+import $ from './Qry.js';
 // or
-import { $, Qry } from './qry.js';
+import {$, Qry} from './Qry.js';
 ```
 
 ### Direct Download
-Download `qry.js` and include it in your project:
+Download `Qry.js` and include it in your project:
+
 ```html
-<script src="qry.js"></script>
+
+<script src="Qry.js"></script>
 ```
 
 ## Quick Start
@@ -55,7 +58,7 @@ Download `qry.js` and include it in your project:
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js"></script>
 </head>
 <body>
     <button id="demo">Click me!</button>

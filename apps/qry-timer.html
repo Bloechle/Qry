@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>UniFR - Exam Timer</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unifr: "#005395",
+                        dark: { 100: "#0a0a0a", 200: "#1a1a1a", 300: "#2d2d30", 400: "#3e3e42", 500: "#52525b" }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Flowbite -->
+    <script defer src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Qry.js -->
+    <script defer src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js"></script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn { @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium; }
+            .btn-primary { @apply bg-unifr hover:bg-unifr/90 text-white focus:ring-2 focus:ring-unifr/50; }
+            .btn-secondary { @apply bg-gray-600 hover:bg-gray-700 text-white focus:ring-2 focus:ring-gray-500/50; }
+            .btn-success { @apply bg-green-600 hover:bg-green-700 text-white; }
+            .btn-warning { @apply bg-yellow-600 hover:bg-yellow-700 text-white; }
+            .btn-danger { @apply bg-red-600 hover:bg-red-700 text-white; }
+        }
+
+        body {
+            font-family: 'SF Mono', monospace;
+            background: #003A6C;
+        }
+
+        .time-display {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        @keyframes stripe-flow {
+            0% { background-position: 0 0; }
+            100% { background-position: 42px 0; }
+        }
+
+        .stripes-pattern {
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 15px, rgba(255,255,255,0.1) 15px, rgba(255,255,255,0.1) 30px);
+            background-size: 42px 100%;
+        }
+
+        .stripe-animate {
+            animation: stripe-flow 2s linear infinite;
+        }
+
+        .time-warning {
+            animation: warning-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes warning-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+
+<body class="text-white min-h-screen flex flex-col relative">
+
+<!-- Progress Bar -->
+<div class="w-full h-10 absolute top-0 left-0 bg-black/10 backdrop-blur-sm">
+    <div id="progress-bar" class="h-full transition-all duration-1000 relative overflow-hidden" style="width: 100%;">
+        <div class="absolute inset-0 bg-white/40 backdrop-blur-md"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-cyan-400/30 via-blue-400/30 to-cyan-400/30"></div>
+        <div id="progress-stripes" class="absolute inset-0 stripes-pattern"></div>
+    </div>
+</div>
+
+<!-- Instructions Modal -->
+<div id="instructions-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" tabindex="-1">
+    <div class="max-w-7xl mx-auto px-6" id="modal-content">
+        <div class="text-center mb-10">
+            <h1 id="modal-title" class="text-3xl font-light text-white mb-2 cursor-pointer hover:text-blue-400 transition-colors"
+                title="Cliquez pour changer le mode d'examen">
+                Consignes d'examen
+            </h1>
+            <p id="modal-subtitle" class="text-gray-300">Exam Instructions • Prüfungsanweisungen • Consignes d'examen</p>
+        </div>
+
+        <div id="instructions-content" class="grid md:grid-cols-3 gap-10">
+            <!-- Content will be filled by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- UniFR Logo -->
+<div class="absolute bottom-6 left-6">
+    <button id="logo-btn" class="cursor-pointer hover:scale-105 transition-transform"
+            title="Instructions + Test du double bip">
+        <svg width="91" height="108" viewBox="0 0 30.499998 36.000002">
+            <g>
+                <path fill="#ffffff" d="M 1,6.671875 V 1 h 3.496094 v 5.339844 c 0,0.738281 0.167969,1.476562 1.125,1.476562 0.957031,0 1.125,-0.738281 1.125,-1.476562 V 1 h 3.492187 v 5.671875 c 0,2.859375 -1.976562,3.765625 -4.617187,3.765625 C 2.980469,10.4375 1,9.53125 1,6.671875"/>
+                <path fill="#ffffff" d="m 18.269531,3.71875 c 0.664063,0.878906 1.058594,1.507813 1.058594,1.507813 h 0.06641 c 0,0 -0.03516,-0.753907 -0.03516,-1.636719 V 1 h 3.496094 v 9.25 H 19.957031 L 17.808594,7.535156 C 17.160157,6.703125 16.71875,6.042969 16.71875,6.042969 h -0.07031 c 0,0 0.03516,0.722656 0.03516,1.898437 V 10.25 H 13.191413 V 1 h 3.066406 z m 0,0"/>
+                <path fill="#ffffff" d="M 29.496094,10.253906 H 26.003907 V 1 h 3.492187 z m 0,0"/>
+                <path fill="#ffffff" d="m 1.261719,22.648437 v -9.25 h 8.84375 v 2.765626 H 4.753907 v 1.257812 h 4.511718 v 2.621094 H 4.753907 v 2.605468 z m 0,0"/>
+                <path fill="#ffffff" d="m 1.011719,35.015625 h 9.21875 v -9.214844 h -9.21875 z m 0,0"/>
+                <path fill="#ffffff" d="m 16.617188,17.625 h 0.910156 c 0.578125,0 0.964844,-0.25 0.964844,-0.871094 0,-0.535156 -0.347657,-0.835937 -0.929688,-0.835937 h -0.945312 z m 2.230469,5.023437 c -0.324219,-0.3125 -0.425782,-0.59375 -0.5625,-1.144531 L 18.117188,20.78125 c -0.121094,-0.550781 -0.375,-0.722656 -0.871094,-0.722656 h -0.628906 v 2.589843 h -3.425781 v -9.25 h 4.855468 c 2.304688,0 4.023438,0.773438 4.023438,2.984376 0,1.539062 -0.820313,2.21875 -2.027344,2.402343 v 0.06641 c 0.886719,0.125 1.328125,0.53125 1.585938,1.367187 L 22,21.441409 c 0.171875,0.535157 0.308594,0.863281 0.683594,1.207031 z m 0,0"/>
+            </g>
+        </svg>
+    </button>
+</div>
+
+<!-- Controls -->
+<div class="absolute bottom-6 right-6 flex gap-4 items-center">
+    <div class="flex gap-2 items-center bg-white/10 backdrop-blur px-4 py-3 rounded-lg border border-white/20 h-[52px]">
+        <input type="number" id="duration-input"
+               class="bg-transparent text-white w-20 text-center text-xl outline-none"
+               min="0" max="180" value="120">
+        <span class="text-base opacity-70">min</span>
+
+        <!-- Reset button -->
+        <button id="reset-btn" class="ml-2 p-2 hover:bg-white/20 rounded-lg transition-all opacity-70 hover:opacity-100"
+                title="Reset timer">
+            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- Toggle Play/Pause Button -->
+    <button id="toggle-btn" class="btn btn-success h-[52px]">
+        <i id="toggle-icon" data-lucide="play" class="w-5 h-5"></i>
+        <span id="toggle-text">Start</span>
+    </button>
+</div>
+
+<!-- Main content -->
+<div class="flex-1 flex flex-col items-center justify-center">
+    <div id="time-display" class="time-display text-[10rem] font-bold tracking-wider transition-colors duration-500">
+        02:00:00
+    </div>
+
+    <!-- Warning message (last 5 minutes) -->
+    <div id="warning-message" class="text-center mt-6 font-medium text-white time-warning hidden">
+        <div class="text-2xl">Veuillez terminer votre examen</div>
+        <div class="text-2xl">Bitte beenden Sie Ihre Prüfung</div>
+        <div class="text-2xl">Please finish your exam</div>
+    </div>
+
+    <!-- Overtime message -->
+    <div id="overtime-message" class="text-center mt-8 font-bold text-red-400 time-warning hidden">
+        <div class="text-2xl">Remettez vos copies en silence</div>
+        <div class="text-2xl">Geben Sie Ihre Arbeiten schweigend ab</div>
+        <div class="text-2xl">Submit your papers in silence</div>
+    </div>
+</div>
+
+<script type="module">
+    import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js';
+    import { QryApp } from './QryApp.js';
+
+    class ExamTimer extends QryApp {
+        #isRunning = false;
+        #remainingSeconds = 7200; // 120 minutes default
+        #totalSeconds = 7200;
+        #currentMode = 'open';
+        #fiveMinuteBeepPlayed = false;
+        #intervalId = null;
+
+        constructor() {
+            super({
+                title: 'UniFR Exam Timer',
+                logLevel: 'warn',
+                autoRefreshIcons: true
+            });
+            this.#init();
+        }
+
+        #init() {
+            this.#setupBindings();
+            this.#setupKeyboard();
+            this.#updateDisplay();
+            this.#updateInstructions();
+        }
+
+        #setupBindings() {
+            this.bindAll({
+                '#toggle-btn': () => this.#toggleTimer(),
+                '#reset-btn': () => this.#reset(),
+                '#duration-input': {
+                    event: 'change',
+                    handler: () => this.#updateDuration()
+                },
+                '#logo-btn': () => this.#showInstructionsAndBeep(),
+                '#modal-title': () => this.#switchMode(),
+                '#instructions-modal': {
+                    event: 'click',
+                    handler: (e) => {
+                        if (e.target.id === 'instructions-modal') {
+                            this.#hideModal();
+                        }
+                    }
+                }
+            });
+
+            // Handle Enter key on duration input
+            $('#duration-input').on('keypress', (e) => {
+                if (e.key === 'Enter') this.#updateDuration();
+            });
+        }
+
+        #setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
+                    e.preventDefault();
+                    this.#toggleTimer();
+                }
+
+                if (e.key === 'Escape' && !$('#instructions-modal').cls('?hidden')) {
+                    this.#hideModal();
+                }
+            });
+        }
+
+        #toggleTimer() {
+            this.#isRunning ? this.#pause() : this.#start();
+        }
+
+        #start() {
+            if (!this.#isRunning && this.#remainingSeconds === this.#totalSeconds) {
+                this.#updateDuration();
+            }
+
+            this.action('Start Timer', () => {
+                this.#isRunning = true;
+                this.#updateToggleButton();
+                $('#progress-stripes').cls('+stripe-animate');
+
+                this.#intervalId = setInterval(() => {
+                    this.#remainingSeconds--;
+                    this.#updateDisplay();
+                }, 1000);
+            });
+        }
+
+        #pause() {
+            this.action('Pause Timer', () => {
+                this.#isRunning = false;
+                this.#updateToggleButton();
+                $('#progress-stripes').cls('-stripe-animate');
+
+                if (this.#intervalId) {
+                    clearInterval(this.#intervalId);
+                    this.#intervalId = null;
+                }
+            });
+        }
+
+        #reset() {
+            this.action('Reset Timer', () => {
+                this.#pause();
+                this.#fiveMinuteBeepPlayed = false;
+                this.#updateDuration();
+                this.#updateDisplay();
+                this.#updateToggleButton();
+            });
+        }
+
+        #updateDuration() {
+            const minutes = Math.max(0, parseInt($('#duration-input').val()) || 120);
+            this.#totalSeconds = minutes * 60;
+
+            if (!this.#isRunning) {
+                this.#remainingSeconds = this.#totalSeconds;
+            }
+
+            this.#updateInstructions();
+            this.info(`Duration set to ${minutes} minutes`);
+        }
+
+        #updateDisplay() {
+            const isNegative = this.#remainingSeconds < 0;
+            const absSeconds = Math.abs(this.#remainingSeconds);
+            const time = (isNegative ? '-' : '') + this.#formatTime(absSeconds);
+
+            $('#time-display').text(time);
+
+            // Update progress bar
+            const progressPercent = Math.max(0, (this.#remainingSeconds / this.#totalSeconds) * 100);
+            $('#progress-bar').css('width', progressPercent + '%');
+
+            // Reset warning classes
+            $('#time-display').cls('-time-warning -text-red-400');
+            $('#warning-message').hide();
+            $('#overtime-message').hide();
+
+            // Check for 5-minute warning beep
+            if (this.#remainingSeconds === 300 && this.#isRunning && !this.#fiveMinuteBeepPlayed) {
+                this.#playDoubleBeep();
+                this.#fiveMinuteBeepPlayed = true;
+                this.warning('5 minutes remaining!');
+            }
+
+            // Handle different time states
+            if (isNegative) {
+                $('#time-display').cls('+text-red-400 +time-warning');
+                $('#overtime-message').show();
+            } else if (this.#remainingSeconds <= 300 && this.#remainingSeconds >= 0) {
+                $('#time-display').cls('+time-warning');
+                $('#warning-message').show();
+            }
+        }
+
+        #updateToggleButton() {
+            const btn = $('#toggle-btn');
+            const icon = $('#toggle-icon');
+            const text = $('#toggle-text');
+
+            if (this.#isRunning) {
+                // Show pause state - yellow button with pause icon
+                btn.cls('-btn-success +btn-warning');
+                icon.attr('data-lucide', 'pause');
+                text.text('Pause');
+            } else {
+                // Show start state - green button with play icon
+                btn.cls('-btn-warning +btn-success');
+                icon.attr('data-lucide', 'play');
+                text.text('Start');
+            }
+
+            this.refreshIcons();
+        }
+
+        #formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return String(h).padStart(2, '0') + ':' +
+                String(m).padStart(2, '0') + ':' +
+                String(s).padStart(2, '0');
+        }
+
+        #switchMode() {
+            this.#currentMode = this.#currentMode === 'open' ? 'closed' : 'open';
+            this.#updateInstructions();
+            this.info(`Switched to ${this.#currentMode} book exam mode`);
+        }
+
+        #updateInstructions() {
+            const currentDuration = Math.max(0, parseInt($('#duration-input').val()) || 120);
+            const config = this.#getConfig();
+            const mode = config.modes[this.#currentMode];
+
+            $('#modal-title').text(mode.title);
+            $('#modal-subtitle').text(mode.subtitle);
+
+            let html = '';
+            const languages = ['fr', 'de', 'en'];
+
+            for (const langKey of languages) {
+                const lang = mode.languages[langKey];
+
+                html += '<div class="bg-white rounded-lg shadow-lg overflow-hidden">';
+                html += `<h2 class="text-2xl font-medium text-white bg-slate-700 mb-0 pb-4 pt-5 px-8">${lang.name}</h2>`;
+                html += '<div>';
+
+                lang.instructions.forEach((instruction, index) => {
+                    const bgClass = (index % 2 === 1) ? 'bg-gray-100' : '';
+                    const updatedInstruction = instruction
+                        .replace(/120 minutes?/g, currentDuration + ' minutes')
+                        .replace(/120 Minuten/g, currentDuration + ' Minuten');
+
+                    html += `<div class="text-base text-gray-700 leading-relaxed px-8 py-4 ${bgClass}">`;
+                    html += updatedInstruction;
+                    html += '</div>';
+                });
+
+                html += '</div></div>';
+            }
+
+            $('#instructions-content').html(html);
+        }
+
+        #showInstructionsAndBeep() {
+            $('#instructions-modal').cls('-hidden');
+            this.#playDoubleBeep();
+            this.info('Instructions displayed');
+        }
+
+        #hideModal() {
+            $('#instructions-modal').cls('+hidden');
+        }
+
+        #playDoubleBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+                // First beep
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.frequency.setValueAtTime(800, ctx.currentTime);
+                gain1.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc1.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.3);
+
+                // Second beep
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.frequency.setValueAtTime(800, ctx.currentTime + 0.5);
+                gain2.gain.setValueAtTime(0.5, ctx.currentTime + 0.5);
+                gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+                osc2.start(ctx.currentTime + 0.5);
+                osc2.stop(ctx.currentTime + 0.8);
+            } catch (error) {
+                this.logger.warn('Audio not supported or blocked');
+            }
+        }
+
+        #getConfig() {
+            return {
+                modes: {
+                    open: {
+                        title: "Consignes d'examen",
+                        subtitle: "Exam Instructions • Prüfungsanweisungen • Consignes d'examen",
+                        languages: {
+                            fr: {
+                                name: "Français",
+                                instructions: [
+                                    '<strong>Durée :</strong> 120 minutes',
+                                    '<strong>Ne pas retourner</strong> l\'épreuve avant le début',
+                                    '<strong>Examen à livre ouvert</strong> : documents papier autorisés',
+                                    'Appareils électroniques <strong>strictement interdits</strong>',
+                                    '<strong>Lisez attentivement</strong> votre copie et posez vos questions durant les 5 premières minutes',
+                                    '<strong>Remise de copie</strong> à tout moment, en silence',
+                                    'Présenter la <strong>carte d\'étudiant</strong> lors de la remise'
+                                ]
+                            },
+                            de: {
+                                name: "Deutsch",
+                                instructions: [
+                                    '<strong>Dauer :</strong> 120 Minuten',
+                                    'Prüfung <strong>nicht vor Beginn umdrehen</strong>',
+                                    '<strong>Open-Book-Prüfung</strong> : Papierunterlagen erlaubt',
+                                    'Elektronische Geräte <strong>streng verboten</strong>',
+                                    '<strong>Lesen Sie</strong> Ihre Prüfung aufmerksam und stellen Sie Fragen in den ersten 5 Minuten',
+                                    '<strong>Abgabe</strong> jederzeit, still',
+                                    'Studienkarte bei der Abgabe <strong>vorzeigen</strong>'
+                                ]
+                            },
+                            en: {
+                                name: "English",
+                                instructions: [
+                                    '<strong>Duration :</strong> 120 minutes',
+                                    '<strong>Do not turn over</strong> the exam before the start',
+                                    '<strong>Open book exam</strong> : paper documents allowed',
+                                    'Electronic devices <strong>strictly prohibited</strong>',
+                                    '<strong>Read</strong> your exam carefully and ask questions during the first 5 minutes',
+                                    '<strong>Paper submission</strong> anytime, in silence',
+                                    '<strong>Show student ID</strong> when submitting'
+                                ]
+                            }
+                        }
+                    },
+                    closed: {
+                        title: "Consignes d'examen",
+                        subtitle: "Exam Instructions • Prüfungsanweisungen • Consignes d'examen",
+                        languages: {
+                            fr: {
+                                name: "Français",
+                                instructions: [
+                                    '<strong>Durée :</strong> 120 minutes',
+                                    '<strong>Ne pas retourner</strong> l\'épreuve avant le début',
+                                    '<strong>Examen à livre fermé</strong> : aucun document autorisé',
+                                    'Appareils électroniques <strong>strictement interdits</strong>',
+                                    '<strong>Lisez attentivement</strong> votre copie et posez vos questions durant les 5 premières minutes',
+                                    '<strong>Remise de copie</strong> à tout moment, en silence',
+                                    'Présenter la <strong>carte d\'étudiant</strong> lors de la remise'
+                                ]
+                            },
+                            de: {
+                                name: "Deutsch",
+                                instructions: [
+                                    '<strong>Dauer :</strong> 120 Minuten',
+                                    'Prüfung <strong>nicht vor Beginn umdrehen</strong>',
+                                    '<strong>Geschlossene Prüfung</strong> : keine Unterlagen erlaubt',
+                                    'Elektronische Geräte <strong>streng verboten</strong>',
+                                    '<strong>Lesen Sie</strong> Ihre Prüfung aufmerksam und stellen Sie Fragen in den ersten 5 Minuten',
+                                    '<strong>Abgabe</strong> jederzeit, still',
+                                    'Studienkarte bei der Abgabe <strong>vorzeigen</strong>'
+                                ]
+                            },
+                            en: {
+                                name: "English",
+                                instructions: [
+                                    '<strong>Duration :</strong> 120 minutes',
+                                    '<strong>Do not turn over</strong> the exam before the start',
+                                    '<strong>Closed book exam</strong> : no documents allowed',
+                                    'Electronic devices <strong>strictly prohibited</strong>',
+                                    '<strong>Read</strong> your exam carefully and ask questions during the first 5 minutes',
+                                    '<strong>Paper submission</strong> anytime, in silence',
+                                    '<strong>Show student ID</strong> when submitting'
+                                ]
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    // Initialize when DOM is ready
+    $.ready(() => {
+        window.timer = new ExamTimer();
+    });
+</script>
+</body>
+</html>
