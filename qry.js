@@ -2,7 +2,7 @@
  * Qry.js - Ultra-lightweight DOM manipulation library
  * Optimized for minimal verbosity and maximum performance
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @author JavaWeb Project
  * @license MIT
  */
@@ -312,8 +312,23 @@ class Qry {
     }
 }
 
-// Create global instance (like original Jex)
+// Create global instance
 const qry = new Qry();
 
-// Export both the class and the instance
-export default qry;
+// Create global $ function that delegates to qry.$
+function $(selector) {
+    return qry.$(selector);
+}
+
+// Add static methods to $ function for advanced usage
+$.ready = (fn) => qry.ready(fn);
+$.create = (tag, props) => qry.create(tag, props);
+
+// Make $ available globally (avoid conflicts by checking first)
+if (typeof window !== 'undefined' && !window.$) {
+    window.$ = $;
+}
+
+// Export both the class, instance, and $ function
+export { Qry, qry, $ };
+export default $;

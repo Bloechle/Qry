@@ -3,95 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qry Test</title>
-    <style>
-        body { font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; }
-        button { padding: 8px 16px; margin: 4px; border: none; background: #007acc; color: white; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #005999; }
-        .test { margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; }
-        .output { background: #f5f5f5; padding: 8px; margin: 8px 0; border-radius: 4px; font-family: monospace; }
-        .highlight { background: yellow !important; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 4px; }
+    <title>Qry.js Test - Modern</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3b82f6",
+                        secondary: "#64748b",
+                        accent: "#22d3ee"
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn {
+                @apply inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors focus:ring-2 focus:ring-offset-2;
+            }
+            .btn-primary { @apply bg-primary hover:bg-blue-600 focus:ring-blue-500; }
+            .btn-accent { @apply bg-accent text-gray-900 hover:bg-cyan-400 focus:ring-cyan-500; }
+            .btn-success { @apply bg-green-500 hover:bg-green-600 focus:ring-green-500; }
+            .btn-danger { @apply bg-red-500 hover:bg-red-600 focus:ring-red-500; }
+            .btn-purple { @apply bg-purple-500 hover:bg-purple-600 focus:ring-purple-500; }
+            .btn-gray { @apply bg-gray-500 hover:bg-gray-600 focus:ring-gray-500; }
+            .btn-sm { @apply px-3 py-2 text-sm; }
+
+            .card { @apply bg-white rounded-xl shadow-sm p-6 border border-gray-200; }
+            .section-header { @apply flex items-center gap-2 mb-4; }
+            .section-title { @apply text-xl font-semibold; }
+            .output { @apply bg-gray-100 border border-gray-300 rounded-lg p-4 font-mono text-sm; }
+            .input { @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent; }
+        }
     </style>
+
+    <!-- Flowbite -->
+    <script defer src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
-<body>
-<h1>Qry.js Test</h1>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<div class="max-w-4xl mx-auto p-6 space-y-6">
 
-<div class="test">
-    <h3>Text & HTML</h3>
-    <button id="btn-text">Change Text</button>
-    <button id="btn-html">Set HTML</button>
-    <div class="output" id="output">Original content</div>
-</div>
+    <!-- Header -->
+    <header class="text-center card">
+        <div class="flex items-center justify-center gap-3 mb-2">
+            <i data-lucide="zap" class="w-8 h-8 text-accent"></i>
+            <h1 class="text-3xl font-bold text-primary">Qry.js Test</h1>
+        </div>
+        <p class="text-gray-600">Ultra-lightweight DOM manipulation with modern styling</p>
+    </header>
 
-<div class="test">
-    <h3>Classes</h3>
-    <button id="btn-add">Add</button>
-    <button id="btn-remove">Remove</button>
-    <button id="btn-toggle">Toggle</button>
-    <div class="output" id="target">Target Element</div>
-</div>
+    <!-- Text & HTML Section -->
+    <section class="card">
+        <div class="section-header">
+            <i data-lucide="type" class="w-5 h-5 text-primary"></i>
+            <h3 class="section-title">Text & HTML</h3>
+        </div>
 
-<div class="test">
-    <h3>Form Values</h3>
-    <input id="input" value="Hello" type="text">
-    <button id="btn-get">Get Value</button>
-    <button id="btn-set">Set Random</button>
-    <div class="output" id="value-out"></div>
-</div>
+        <div class="flex gap-3 mb-4 flex-wrap">
+            <button id="btn-text" class="btn btn-primary">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                Change Text
+            </button>
+            <button id="btn-html" class="btn btn-accent">
+                <i data-lucide="code" class="w-4 h-4"></i>
+                Set HTML
+            </button>
+        </div>
 
-<div class="test">
-    <h3>Create Elements</h3>
-    <button id="btn-create">Create Card</button>
-    <button id="btn-clear">Clear</button>
-    <div id="container" class="output">Cards appear here...</div>
+        <div id="output" class="output">
+            Original content
+        </div>
+    </section>
+
+    <!-- Classes Section -->
+    <section class="card">
+        <div class="section-header">
+            <i data-lucide="palette" class="w-5 h-5 text-primary"></i>
+            <h3 class="section-title">Class Manipulation</h3>
+        </div>
+
+        <div class="flex gap-2 mb-4 flex-wrap">
+            <button id="btn-add" class="btn btn-success btn-sm">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                Add
+            </button>
+            <button id="btn-remove" class="btn btn-danger btn-sm">
+                <i data-lucide="minus" class="w-3 h-3"></i>
+                Remove
+            </button>
+            <button id="btn-toggle" class="btn btn-purple btn-sm">
+                <i data-lucide="shuffle" class="w-3 h-3"></i>
+                Toggle
+            </button>
+            <button id="btn-check" class="btn btn-gray btn-sm">
+                <i data-lucide="search" class="w-3 h-3"></i>
+                Check
+            </button>
+        </div>
+
+        <div id="target" class="output border-2 transition-all duration-200">
+            Target Element
+        </div>
+
+        <div id="class-status" class="mt-2 text-sm text-gray-600 font-mono"></div>
+    </section>
+
+    <!-- Form Values Section -->
+    <section class="card">
+        <div class="section-header">
+            <i data-lucide="form-input" class="w-5 h-5 text-primary"></i>
+            <h3 class="section-title">Form Values</h3>
+        </div>
+
+        <div class="flex gap-3 items-center mb-4 flex-wrap">
+            <input id="input" type="text" value="Hello Qry!" class="input flex-1 min-w-0">
+            <button id="btn-get" class="btn btn-primary">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+                Get
+            </button>
+            <button id="btn-set" class="btn btn-accent">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                Random
+            </button>
+        </div>
+
+        <div id="value-out" class="output min-h-[2rem]"></div>
+    </section>
+
+    <!-- Element Creation Section -->
+    <section class="card">
+        <div class="section-header">
+            <i data-lucide="plus-square" class="w-5 h-5 text-primary"></i>
+            <h3 class="section-title">Element Creation</h3>
+        </div>
+
+        <div class="flex gap-3 mb-4 flex-wrap">
+            <button id="btn-create" class="btn btn-primary">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                Create Card
+            </button>
+            <button id="btn-clear" class="btn btn-danger">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                Clear
+            </button>
+        </div>
+
+        <div id="container" class="min-h-24 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 space-y-2">
+            <div class="text-gray-500 text-sm italic">Cards appear here...</div>
+        </div>
+    </section>
+
+    <!-- Advanced Features -->
+    <section class="card">
+        <div class="section-header">
+            <i data-lucide="settings" class="w-5 h-5 text-primary"></i>
+            <h3 class="section-title">Advanced Features</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <button id="btn-chain" class="btn btn-purple w-full justify-center">
+                    <i data-lucide="link" class="w-4 h-4"></i>
+                    Method Chaining
+                </button>
+            </div>
+            <div>
+                <button id="btn-animate" class="btn btn-success w-full justify-center">
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                    CSS Animation
+                </button>
+            </div>
+        </div>
+
+        <div id="demo-area" class="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-300 text-center">
+            <div class="text-gray-500">Demo area - click buttons above</div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-500 text-sm">
+        <div class="flex items-center justify-center gap-2 mb-2">
+            <i data-lucide="github" class="w-4 h-4"></i>
+            <span>Powered by Qry.js - Ultra-lightweight DOM manipulation</span>
+        </div>
+        <div>Styled with Tailwind CSS + Flowbite + Lucide Icons</div>
+    </footer>
 </div>
 
 <script type="module">
-    import qry from './qry.js';
+    import $ from './qry.js';
 
     let count = 0;
 
-    // Text tests
-    qry.$('#btn-text').click(() =>
-        qry.$('#output').text('Text changed at ' + new Date().toLocaleTimeString())
+    // Initialize icons when DOM is ready
+    $.ready(() => {
+        // Initialize Lucide icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    });
+
+    // Text & HTML tests
+    $('#btn-text').click(() =>
+        $('#output').text('Text changed at ' + new Date().toLocaleTimeString())
     );
 
-    qry.$('#btn-html').click(() =>
-        qry.$('#output').html('<strong>HTML</strong> with <em>formatting</em>')
+    $('#btn-html').click(() =>
+        $('#output').html('<strong class="text-green-600">HTML</strong> with <em class="text-blue-600">formatting</em>')
     );
 
-    // Class tests
-    qry.$('#btn-add').click(() => qry.$('#target').cls('+highlight'));
-    qry.$('#btn-remove').click(() => qry.$('#target').cls('-highlight'));
-    qry.$('#btn-toggle').click(() => qry.$('#target').cls('~highlight'));
+    // Class tests - with visual feedback
+    $('#btn-add').click(() => {
+        $('#target').cls('+bg-yellow-200 +border-yellow-400');
+        $('#class-status').text('Added highlight classes using cls("+bg-yellow-200 +border-yellow-400")');
+    });
+
+    $('#btn-remove').click(() => {
+        $('#target').cls('-bg-yellow-200 -border-yellow-400');
+        $('#class-status').text('Removed highlight classes using cls("-bg-yellow-200 -border-yellow-400")');
+    });
+
+    $('#btn-toggle').click(() => {
+        $('#target').cls('~bg-yellow-200 ~border-yellow-400');
+        $('#class-status').text('Toggled highlight classes using cls("~bg-yellow-200 ~border-yellow-400")');
+    });
+
+    $('#btn-check').click(() => {
+        const hasClass = $('#target').cls('?bg-yellow-200');
+        $('#class-status').text(`Element has highlight: ${hasClass} (checked with cls("?bg-yellow-200"))`);
+    });
 
     // Form tests
-    qry.$('#btn-get').click(() =>
-        qry.$('#value-out').text('Value: "' + qry.$('#input').val() + '"')
+    $('#btn-get').click(() =>
+        $('#value-out').text('Current value: "' + $('#input').val() + '"')
     );
 
-    qry.$('#btn-set').click(() => {
-        const random = 'Random: ' + Math.floor(Math.random() * 100);
-        qry.$('#input').val(random);
-        qry.$('#value-out').text('Set to: "' + random + '"');
+    $('#btn-set').click(() => {
+        const random = 'Random: ' + Math.floor(Math.random() * 1000);
+        $('#input').val(random);
+        $('#value-out').text('Set to: "' + random + '"');
     });
 
-    // Creation tests
-    qry.$('#btn-create').click(() => {
-        const card = qry.create('div', {
-            text: `Card ${++count}`,
-            class: 'output'
+    // Element creation tests
+    $('#btn-create').click(() => {
+        const card = $.create('div', {
+            text: `Card ${++count} - Created at ${new Date().toLocaleTimeString()}`,
+            class: 'bg-white border border-gray-200 rounded-lg p-3 shadow-sm'
         });
-        qry.$('#container').append(card);
+        $('#container').append(card);
     });
 
-    qry.$('#btn-clear').click(() => {
-        qry.$('#container').html('Cards appear here...');
+    $('#btn-clear').click(() => {
+        $('#container').html('<div class="text-gray-500 text-sm italic">Cards appear here...</div>');
         count = 0;
     });
 
-    console.log('Qry.js test loaded');
+    // Advanced features
+    $('#btn-chain').click(() => {
+        $('#demo-area')
+            .html('<div class="font-bold text-primary">Method chaining demo!</div>')
+            .cls('+bg-blue-50 +border-blue-200')
+            .css({ transform: 'scale(1.05)', transition: 'all 0.3s ease' });
+
+        setTimeout(() => {
+            $('#demo-area')
+                .cls('-bg-blue-50 -border-blue-200')
+                .css({ transform: '', transition: '' });
+        }, 2000);
+    });
+
+    $('#btn-animate').click(() => {
+        $('#demo-area')
+            .html('<div class="animate-bounce text-green-600 font-bold">CSS Animation with Tailwind!</div>')
+            .cls('+bg-green-50 +border-green-200');
+
+        setTimeout(() => {
+            $('#demo-area')
+                .html('<div class="text-gray-500">Demo area - click buttons above</div>')
+                .cls('-bg-green-50 -border-green-200');
+        }, 3000);
+    });
+
+    console.log('Qry.js modern test page loaded!');
+    console.log('Available methods:', Object.getOwnPropertyNames($('#output').__proto__));
 </script>
 </body>
 </html>

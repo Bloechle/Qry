@@ -1,101 +1,114 @@
-# Qry.js
+# Qry.js ⚡
 
-Ultra-lightweight DOM manipulation library optimized for minimal verbosity and maximum performance.
+> Ultra-lightweight DOM manipulation library optimized for minimal verbosity and maximum performance
 
-## Why Qry?
+## 🚀 Why Choose Qry?
 
-- **Ultra-lightweight** - ~3KB minified, zero dependencies
-- **High performance** - Direct DOM operations, no virtual DOM overhead
-- **Minimal syntax** - Less typing, more doing
-- **Method chaining** - Fluent, readable code
-- **Modern browsers** - ES6+ with broad compatibility
-- **Unified API** - Single class handles elements and collections
+**Less code, more results.** Qry delivers the power of jQuery in a fraction of the size.
 
-## Quick Start
+- **🪶 Ultra-lightweight** - Only ~3KB minified, zero dependencies
+- **⚡ Blazing fast** - Direct DOM operations, no virtual DOM overhead
+- **✨ Minimal syntax** - Less typing, cleaner code
+- **🔗 Method chaining** - Fluent, readable API
+- **🌐 Modern browsers** - ES6+ with broad compatibility
+- **🎯 Unified API** - Single class handles elements and collections seamlessly
 
-```html
-<script src="qry.js"></script>
-<script>
-    // Selection and manipulation
-    $('#button').text('Click me!').click(() => {
-        alert('Hello from Qry!');
-    });
-</script>
+## ⭐ At a Glance
+
+```javascript
+// Before (Vanilla JS)
+document.getElementById('button').addEventListener('click', function() {
+    this.textContent = 'Clicked!';
+    this.classList.add('active');
+    this.style.background = 'green';
+});
+
+// After (Qry.js)
+$('#button').click(() => {
+    $('#button').text('Clicked!').cls('+active').css('background', 'green');
+});
 ```
 
-## Installation
+## 📦 Installation
 
-### Direct Download
+### CDN (Recommended)
 ```html
-<script src="qry.js"></script>
-```
-
-### CDN (jsDelivr)
-```html
-<script src="https://cdn.jsdelivr.net/gh/youruser/qry/qry.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js"></script>
 ```
 
 ### ES Modules
 ```javascript
+import $ from './qry.js';
+// or
 import { $, Qry } from './qry.js';
 ```
 
-## API Reference
-
-### Selection
-
-```javascript
-// ID selection (fastest)
-$('#myId')
-
-// Class selection  
-$('.myClass')
-
-// Tag selection
-$('div')
-
-// Complex selectors
-$('div.active[data-id="123"]')
-
-// Multiple documents (iframe support)
-$('#btn', iframeDocument)
+### Direct Download
+Download `qry.js` and include it in your project:
+```html
+<script src="qry.js"></script>
 ```
 
-### Text & HTML
+## 🎯 Quick Start
 
-```javascript
-// Get/set text content
-$('#title').text()              // Get text
-$('#title').text('New title')   // Set text
-
-// Get/set HTML content
-$('#content').html()                    // Get HTML
-$('#content').html('<b>Bold text</b>')  // Set HTML
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js"></script>
+</head>
+<body>
+    <button id="demo">Click me!</button>
+    
+    <script>
+        $('#demo').click(() => {
+            $('body').append('<p>Hello Qry! 🎉</p>');
+        });
+    </script>
+</body>
+</html>
 ```
 
-### Classes (Prefix Syntax)
+## 📚 API Reference
+
+### 🔍 Element Selection
 
 ```javascript
-// Add classes
-$('.card').cls('+active +highlight')
-
-// Remove classes
-$('.card').cls('-hidden -disabled') 
-
-// Toggle classes
-$('.card').cls('~selected')
-
-// Check classes (returns boolean)
-const isActive = $('.card').cls('?active')
-
-// Mixed operations
-$('.card').cls('+show -hidden ~selected ?visible')
+$('#myId')                        // ID selection (fastest)
+$('.myClass')                     // Class selection
+$('div')                          // Tag selection
+$('div.active[data-id="123"]')    // Complex selectors
+$('#btn', iframeDoc)              // Custom document context
 ```
 
-### Attributes & Properties
+### 📝 Content Manipulation
 
 ```javascript
-// Attributes
+// Text content
+$('#title').text()                // Get text
+$('#title').text('New title')     // Set text
+
+// HTML content
+$('#content').html()              // Get HTML
+$('#content').html('<b>Bold</b>') // Set HTML
+```
+
+### 🎨 CSS Classes (Intuitive Prefix Syntax)
+
+```javascript
+$('.card').cls('+active')         // Add class
+$('.card').cls('-hidden')         // Remove class
+$('.card').cls('~selected')       // Toggle class
+$('.card').cls('?visible')        // Check class (returns boolean)
+
+// Multiple operations
+$('.card').cls('+show -hidden ~selected')
+```
+
+### 🎭 Attributes & Properties
+
+```javascript
+// Single attribute
 $('#link').attr('href', 'https://example.com')
 $('#input').attr('disabled', null)  // Remove attribute
 
@@ -107,12 +120,11 @@ $('#img').attr({
 })
 ```
 
-### CSS Styles
+### 🎨 CSS Styles
 
 ```javascript
 // Single style
 $('.box').css('background', 'red')
-$('.box').css('fontSize', '16px')
 
 // Multiple styles
 $('.box').css({
@@ -125,112 +137,94 @@ $('.box').css({
 const color = $('.box').css('backgroundColor')
 ```
 
-### Events
+### ⚡ Event Handling
 
 ```javascript
-// Click handler (shorthand)
-$('#btn').click(event => {
-    console.log('Clicked!');
-})
+// Click shorthand
+$('#btn').click(e => console.log('Clicked!'))
 
-// Generic event handler
-$('#form').on('submit', event => {
-    event.preventDefault();
+// Generic events
+$('#form').on('submit', e => {
+    e.preventDefault();
     console.log('Form submitted');
 })
 
-// Remove event listeners
+// Remove listeners
 $('#btn').off('click', handler)
 ```
 
-### DOM Manipulation
+### 🏗️ DOM Manipulation
 
 ```javascript
-// Append elements
+// Add content
 $('#container').append('<div>New content</div>')
-$('#container').append($('#other-element'))
-
-// Prepend elements  
 $('#list').prepend('<li>First item</li>')
 
 // Remove elements
 $('.old-items').remove()
 ```
 
-### Element Creation
+### ⚙️ Element Creation
 
 ```javascript
-// Create elements with properties
+// Create with properties
 const card = $.create('div', {
     class: 'card highlight',
     text: 'Card content',
     'data-id': '123'
 });
 
-// Append to parent
-$('#container').append(card);
-
-// Method chaining on created elements
+// Chain methods on creation
 $.create('button', { text: 'Click me' })
   .click(handler)
   .append($('#toolbar'));
 ```
 
-### Form Elements
+### 📋 Form Elements
 
 ```javascript
-// Get/set input values
 $('#name').val()              // Get value
 $('#name').val('John Doe')    // Set value
 
-// Enable/disable elements
-$('#submit').enable()         // Enable
-$('#submit').disable()        // Disable
-$('#submit').enable(false)    // Disable (explicit)
+$('#submit').enable()         // Enable element
+$('#submit').disable()        // Disable element
 ```
 
-### Visibility & State
+### 👁️ Visibility & State
 
 ```javascript
-// Show/hide elements
-$('.modal').show()
-$('.modal').hide()
+$('.modal').show()            // Show element
+$('.modal').hide()            // Hide element
+$('#input').focus()           // Focus element
 
-// Focus elements
-$('#input').focus()
-
-// Check if element exists
+// Check existence
 if ($('#optional').exists) {
-    // Element found in DOM
+    // Element exists in DOM
 }
 ```
 
-### Traversal
+### 🧭 DOM Traversal
 
 ```javascript
-// Parent element
-$('#child').parent()
-
-// Find child elements
-$('#container').find('.items')
-$('#container').find('#specific-item')
+$('#child').parent()          // Get parent element
+$('#container').find('.item') // Find children
 ```
 
-### Utility Methods
+### 🛠️ Utility Methods
 
 ```javascript
-// Wait for DOM ready
+// DOM ready
 $.ready(() => {
-    console.log('DOM loaded!')
+    console.log('DOM loaded!');
 });
 
-// Create elements (static method)  
+// Static element creation
 const div = $.create('div', { class: 'box' });
 ```
 
-## Method Chaining
+## 🔗 Method Chaining Power
 
-All methods return the Qry instance, enabling fluent chaining:
+Build complex interactions with readable, fluent syntax:
 
 ```javascript
 $('#dialog')
@@ -238,75 +232,147 @@ $('#dialog')
     .css({ opacity: 0 })
     .show()
     .css({ opacity: 1 })
-    .click(() => closeDialog());
+    .click(() => closeDialog())
+    .find('.close-btn')
+    .click(() => $('#dialog').hide());
 ```
 
-## Collections vs Single Elements
+## 🎯 Single Elements vs Collections
 
-Qry automatically handles both single elements and collections with the same API:
+Qry automatically handles both scenarios with the same clean API:
 
 ```javascript
-// Single element
-$('#unique-id').text('Hello')      // Sets text on one element
+// Works on single elements
+$('#unique-btn').text('Hello')
 
-// Collection
-$('.cards').text('Hello')          // Sets text on all matching elements
-$('.cards').cls('+highlight')      // Adds class to all elements
+// Works on collections too
+$('.all-buttons').text('Hello')    // Updates ALL matching elements
+$('.cards').cls('+highlight')      // Adds class to ALL cards
 
-// Access underlying elements
-const element = $('#btn').el       // Get single element
-const elements = $('.cards').els   // Get array of elements
+// Access underlying elements when needed
+const element = $('#btn').el       // Single HTMLElement
+const elements = $('.btns').els    // Array of HTMLElements
 ```
 
-## Browser Support
+## 📊 Performance Comparison
 
-- Chrome 60+
-- Firefox 55+ 
-- Safari 12+
-- Edge 79+
+| Library | Size (min) | Speed | Features |
+|---------|------------|-------|----------|
+| **Qry.js** | **~3KB** | **⚡⚡⚡** | Essential DOM manipulation |
+| jQuery | ~30KB | ⚡ | Full-featured, legacy support |
+| Zepto.js | ~10KB | ⚡⚡ | Mobile-focused |
+| Cash.js | ~6KB | ⚡⚡ | jQuery alternative |
 
-Modern browsers with ES6 support. For older browsers, consider using a transpiler like Babel.
-
-## Performance
-
-Qry uses native DOM methods optimized for speed:
-
-- `getElementById()` for ID selectors (2-10x faster than `querySelector()`)
+**Speed optimizations:**
+- Uses `getElementById()` for ID selectors (2-10x faster)
 - Direct property access where possible
 - Minimal abstraction layers
-- No virtual DOM overhead
+- Zero virtual DOM overhead
 
-## Size Comparison
+## 🌍 Browser Support
 
-| Library | Size (minified) | Features |
-|---------|-----------------|----------|
-| **Qry.js** | **~3KB** | Essential DOM manipulation |
-| jQuery | ~30KB | Full-featured, legacy support |
-| Zepto.js | ~10KB | Mobile-focused subset |
-| Cash.js | ~6KB | jQuery alternative |
+- ✅ Chrome 60+
+- ✅ Firefox 55+
+- ✅ Safari 12+
+- ✅ Edge 79+
 
-## Examples
+Modern browsers with ES6+ support. For legacy browsers, use Babel transpilation.
 
-Check out `index.html` for interactive examples and demos.
+## 💡 Real-World Examples
 
-## Contributing
+### Interactive Card Component
+```javascript
+$.create('div', { class: 'card' })
+    .append('<h3>Product Card</h3>')
+    .append('<p>$29.99</p>')
+    .click(function() {
+        $(this).cls('~selected')
+               .css('transform', 'scale(1.05)');
+    })
+    .append($('#products'));
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Form Validation
+```javascript
+$('#signup-form').on('submit', e => {
+    e.preventDefault();
+    
+    const email = $('#email').val();
+    if (!email.includes('@')) {
+        $('#email').cls('+error')
+                   .focus();
+        return;
+    }
+    
+    $('#email').cls('-error +success');
+    // Submit form...
+});
+```
 
-## License
+### Dynamic Content Loading
+```javascript
+$('#load-more').click(async () => {
+    $('#load-more').text('Loading...').disable();
+    
+    try {
+        const data = await fetch('/api/posts').then(r => r.json());
+        data.forEach(post => {
+            $.create('article', { 
+                class: 'post',
+                html: `<h2>${post.title}</h2><p>${post.excerpt}</p>` 
+            }).append($('#posts'));
+        });
+    } finally {
+        $('#load-more').text('Load More').enable();
+    }
+});
+```
+
+## 🧪 Try It Live
+
+Check out the interactive demo in `index.html` or visit our [CodePen examples](https://codepen.io/collection/qryjs).
+
+## 🤝 Contributing
+
+We love contributions! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** your feature branch: `git checkout -b feature/awesome-feature`
+3. **Commit** your changes: `git commit -m 'Add awesome feature'`
+4. **Push** to the branch: `git push origin feature/awesome-feature`
+5. **Open** a Pull Request
+
+### Development Setup
+```bash
+git clone https://github.com/Bloechle/qry.git
+cd qry
+# Open index.html in your browser to test
+```
+
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Changelog
+## 🚀 Changelog
+
+### v1.1.0 (Latest)
+- ✨ Enhanced element creation with property support
+- 🐛 Improved collection handling
+- 📚 Better documentation and examples
 
 ### v1.0.0
-- Initial release
-- Core DOM manipulation features
-- Unified element/collection handling
-- Method chaining support
-- Class prefix syntax (+, -, ~, ?)
-- ES6 modules and CDN distribution
+- 🎉 Initial release
+- ⚡ Core DOM manipulation features
+- 🔗 Method chaining support
+- 🎨 Class prefix syntax (+, -, ~, ?)
+- 📦 ES6 modules and CDN distribution
+
+---
+
+<div align="center">
+
+**Made with ❤️ for developers who value simplicity and performance**
+
+[⭐ Star on GitHub](https://github.com/Bloechle/qry) • [🐛 Report Bug](https://github.com/Bloechle/qry/issues) • [💡 Request Feature](https://github.com/Bloechle/qry/issues)
+
+</div>
