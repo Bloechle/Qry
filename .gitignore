@@ -49,5 +49,7 @@ logs/
 # Temporary files
 *.tmp
 *.temp
-/JavaWeb.txt
-/_qryOverview.txt
+
+#IA files
+*.cjs
+*.txt
