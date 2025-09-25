@@ -13,10 +13,10 @@ class Qry {
     #isCollection = false;
     #doc = null;
 
-    constructor(selector, doc = document) {
+    constructor(selector = document.documentElement, doc = document) {
         this.#doc = doc;
 
-        if (!selector) {
+        if (!selector || selector === document.documentElement) {
             this.#element = this.#doc.documentElement;
             return;
         }
@@ -47,6 +47,11 @@ class Qry {
                 this.#element = element;
             }
         }
+    }
+
+    // Main selector method (like jex.$)
+    $(selector) {
+        return new Qry(selector, this.#doc);
     }
 
     // Core element access
@@ -179,7 +184,7 @@ class Qry {
     // DOM manipulation
     append(content) {
         this.#each(el => {
-            if (content instanceof DOM) {
+            if (content instanceof Qry) {
                 if (content.#isCollection) {
                     content.#elements.forEach(child => el.appendChild(child));
                 } else if (content.#element) {
@@ -196,7 +201,7 @@ class Qry {
 
     prepend(content) {
         this.#each(el => {
-            if (content instanceof DOM) {
+            if (content instanceof Qry) {
                 if (content.#isCollection) {
                     content.#elements.reverse().forEach(child => el.insertBefore(child, el.firstChild));
                 } else if (content.#element) {
@@ -238,32 +243,32 @@ class Qry {
 
     // Find children
     find(selector) {
-        if (!this.#element) return new Qry(null);
+        if (!this.#element) return new Qry(null, this.#doc);
         return new Qry(selector.startsWith('#') ?
             this.#element.querySelector(selector) :
-            this.#element.querySelectorAll(selector)
+            this.#element.querySelectorAll(selector), this.#doc
         );
     }
 
     // Create new element
     create(tag, props = {}) {
         const element = this.#doc.createElement(tag);
-        const dom = new Qry(element, this.#doc);
+        const qry = new Qry(element, this.#doc);
 
         // Apply properties
         Object.entries(props).forEach(([key, value]) => {
             if (key === 'class') {
-                dom.cls(value);
+                qry.cls(value);
             } else if (key === 'text') {
-                dom.text(value);
+                qry.text(value);
             } else if (key === 'html') {
-                dom.html(value);
+                qry.html(value);
             } else {
-                dom.attr(key, value);
+                qry.attr(key, value);
             }
         });
 
-        return dom;
+        return qry;
     }
 
     // Enable/disable
@@ -284,7 +289,7 @@ class Qry {
 
     // Parent element
     parent() {
-        return this.#element?.parentElement ? new Qry(this.#element.parentElement) : new Qry(null);
+        return this.#element?.parentElement ? new Qry(this.#element.parentElement, this.#doc) : new Qry(null, this.#doc);
     }
 
     // Data attributes (simplified)
@@ -295,53 +300,20 @@ class Qry {
         this.#each(el => el.dataset[key] = value);
         return this;
     }
-}
 
-// Ultra-concise global function
-function $(selector, doc = document) {
-    return new DOM(selector, doc);
-}
-
-// Add some useful static methods to $
-$.create = (tag, props, doc = document) => new DOM(null, doc).create(tag, props);
-$.ready = (fn, doc = document) => {
-    if (doc.readyState === 'loading') {
-        doc.addEventListener('DOMContentLoaded', fn);
-    } else {
-        fn();
+    // Ready method (like jex.ready)
+    ready(fn) {
+        if (this.#doc.readyState === 'loading') {
+            this.#doc.addEventListener('DOMContentLoaded', fn);
+        } else {
+            fn();
+        }
+        return this;
     }
-};
-
-// Export for modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { $, DOM };
-} else if (typeof window !== 'undefined') {
-    window.$ = $;
-    window.DOM = DOM;
 }
 
-/**
- * USAGE EXAMPLES:
- *
- * // Selection (minimal syntax)
- * $('#btn')                    // ID
- * $('button')                  // Tag
- * $('.active')                 // Class
- * $('button.btn')              // Complex
- *
- * // Chaining (ultra-concise)
- * $('#btn').text('Click').cls('+active').click(handler);
- *
- * // Classes (prefix operators)
- * el.cls('+active -hidden ~selected');
- *
- * // Events (minimal)
- * el.click(handler);
- * el.on('submit', handler);
- *
- * // Creation
- * $.create('div', { class: 'card', text: 'Hello' }).append(target);
- *
- * // Ready
- * $.ready(() => console.log('DOM loaded'));
- */
+// Create global instance (like original Jex)
+const qry = new Qry();
+
+// Export both the class and the instance
+export default qry;

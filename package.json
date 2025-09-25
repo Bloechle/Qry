@@ -8,10 +8,6 @@
     "qry.js",
     "README.md"
   ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "python3 -m http.server 8000 || python -m http.server 8000"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yourusername/qry.git"
