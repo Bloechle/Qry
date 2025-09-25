@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Qry PDF</title>
-    <link rel="icon" type="image/svg+xml" href="./qry-logo-white.svg">
+    <link rel="icon" type="image/svg+xml" href="../svg/qry-logo-white.svg">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -169,8 +169,8 @@
 <input type="file" id="file-input" accept=".pdf" class="hidden">
 
 <script type="module">
-    import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/qry.js';
-    import { QryApp } from './QryApp.js';
+    import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/Qry@latest/Qry.js';
+    import { QryApp } from 'https://cdn.jsdelivr.net/gh/Bloechle/Qry@latest/QryApp.js';
 
     class QryPDF extends QryApp {
         #pdf = null;

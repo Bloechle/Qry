@@ -20,7 +20,7 @@
  * - Easy to extend for any use case
  */
 
-import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js';
+import $ from './Qry.js';
 
 export class QryApp {
     config = {};
