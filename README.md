@@ -1,19 +1,19 @@
-# Qry.js ⚡
+# Qry.js
 
 > Ultra-lightweight DOM manipulation library optimized for minimal verbosity and maximum performance
 
-## 🚀 Why Choose Qry?
+## Why Choose Qry?
 
 **Less code, more results.** Qry delivers the power of jQuery in a fraction of the size.
 
-- **🪶 Ultra-lightweight** - Only ~3KB minified, zero dependencies
-- **⚡ Blazing fast** - Direct DOM operations, no virtual DOM overhead
-- **✨ Minimal syntax** - Less typing, cleaner code
-- **🔗 Method chaining** - Fluent, readable API
-- **🌐 Modern browsers** - ES6+ with broad compatibility
-- **🎯 Unified API** - Single class handles elements and collections seamlessly
+- **Ultra-lightweight** - Only ~3KB minified, zero dependencies
+- **Blazing fast** - Direct DOM operations, no virtual DOM overhead
+- **Minimal syntax** - Less typing, cleaner code
+- **Method chaining** - Fluent, readable API
+- **Modern browsers** - ES6+ with broad compatibility
+- **Unified API** - Single class handles elements and collections seamlessly
 
-## ⭐ At a Glance
+## At a Glance
 
 ```javascript
 // Before (Vanilla JS)
@@ -29,7 +29,7 @@ $('#button').click(() => {
 });
 ```
 
-## 📦 Installation
+## Installation
 
 ### CDN (Recommended)
 ```html
@@ -49,7 +49,7 @@ Download `qry.js` and include it in your project:
 <script src="qry.js"></script>
 ```
 
-## 🎯 Quick Start
+## Quick Start
 
 ```html
 <!DOCTYPE html>
@@ -69,9 +69,9 @@ Download `qry.js` and include it in your project:
 </html>
 ```
 
-## 📚 API Reference
+## API Reference
 
-### 🔍 Element Selection
+### Element Selection
 
 ```javascript
 $('#myId')                        // ID selection (fastest)
@@ -81,7 +81,7 @@ $('div.active[data-id="123"]')    // Complex selectors
 $('#btn', iframeDoc)              // Custom document context
 ```
 
-### 📝 Content Manipulation
+### Content Manipulation
 
 ```javascript
 // Text content
@@ -93,7 +93,7 @@ $('#content').html()              // Get HTML
 $('#content').html('<b>Bold</b>') // Set HTML
 ```
 
-### 🎨 CSS Classes (Intuitive Prefix Syntax)
+### CSS Classes (Intuitive Prefix Syntax)
 
 ```javascript
 $('.card').cls('+active')         // Add class
@@ -105,7 +105,7 @@ $('.card').cls('?visible')        // Check class (returns boolean)
 $('.card').cls('+show -hidden ~selected')
 ```
 
-### 🎭 Attributes & Properties
+### Attributes & Properties
 
 ```javascript
 // Single attribute
@@ -120,7 +120,7 @@ $('#img').attr({
 })
 ```
 
-### 🎨 CSS Styles
+### CSS Styles
 
 ```javascript
 // Single style
@@ -137,7 +137,7 @@ $('.box').css({
 const color = $('.box').css('backgroundColor')
 ```
 
-### ⚡ Event Handling
+### Event Handling
 
 ```javascript
 // Click shorthand
@@ -153,7 +153,7 @@ $('#form').on('submit', e => {
 $('#btn').off('click', handler)
 ```
 
-### 🏗️ DOM Manipulation
+### DOM Manipulation
 
 ```javascript
 // Add content
@@ -164,7 +164,7 @@ $('#list').prepend('<li>First item</li>')
 $('.old-items').remove()
 ```
 
-### ⚙️ Element Creation
+### Element Creation
 
 ```javascript
 // Create with properties
@@ -180,7 +180,7 @@ $.create('button', { text: 'Click me' })
   .append($('#toolbar'));
 ```
 
-### 📋 Form Elements
+### Form Elements
 
 ```javascript
 $('#name').val()              // Get value
@@ -190,7 +190,7 @@ $('#submit').enable()         // Enable element
 $('#submit').disable()        // Disable element
 ```
 
-### 👁️ Visibility & State
+### Visibility & State
 
 ```javascript
 $('.modal').show()            // Show element
@@ -203,14 +203,14 @@ if ($('#optional').exists) {
 }
 ```
 
-### 🧭 DOM Traversal
+### DOM Traversal
 
 ```javascript
 $('#child').parent()          // Get parent element
 $('#container').find('.item') // Find children
 ```
 
-### 🛠️ Utility Methods
+### Utility Methods
 
 ```javascript
 // DOM ready
@@ -222,7 +222,7 @@ $.ready(() => {
 const div = $.create('div', { class: 'box' });
 ```
 
-## 🔗 Method Chaining Power
+## Method Chaining Power
 
 Build complex interactions with readable, fluent syntax:
 
@@ -237,7 +237,7 @@ $('#dialog')
     .click(() => $('#dialog').hide());
 ```
 
-## 🎯 Single Elements vs Collections
+## Single Elements vs Collections
 
 Qry automatically handles both scenarios with the same clean API:
 
@@ -254,7 +254,7 @@ const element = $('#btn').el       // Single HTMLElement
 const elements = $('.btns').els    // Array of HTMLElements
 ```
 
-## 📊 Performance Comparison
+## Performance Comparison
 
 | Library | Size (min) | Speed | Features |
 |---------|------------|-------|----------|
@@ -269,16 +269,16 @@ const elements = $('.btns').els    // Array of HTMLElements
 - Minimal abstraction layers
 - Zero virtual DOM overhead
 
-## 🌍 Browser Support
+## Browser Support
 
-- ✅ Chrome 60+
-- ✅ Firefox 55+
-- ✅ Safari 12+
-- ✅ Edge 79+
+- Chrome 60+
+- Firefox 55+
+- Safari 12+
+- Edge 79+
 
 Modern browsers with ES6+ support. For legacy browsers, use Babel transpilation.
 
-## 💡 Real-World Examples
+## Real-World Examples
 
 ### Interactive Card Component
 ```javascript
@@ -328,11 +328,11 @@ $('#load-more').click(async () => {
 });
 ```
 
-## 🧪 Try It Live
+## Try It Live
 
 Check out the interactive demo in `index.html` or visit our [CodePen examples](https://codepen.io/collection/qryjs).
 
-## 🤝 Contributing
+## Contributing
 
 We love contributions! Here's how to get started:
 
@@ -349,23 +349,23 @@ cd qry
 # Open index.html in your browser to test
 ```
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🚀 Changelog
+## Changelog
 
 ### v1.1.0 (Latest)
-- ✨ Enhanced element creation with property support
-- 🐛 Improved collection handling
-- 📚 Better documentation and examples
+- Enhanced element creation with property support
+- Improved collection handling
+- Better documentation and examples
 
 ### v1.0.0
-- 🎉 Initial release
-- ⚡ Core DOM manipulation features
-- 🔗 Method chaining support
-- 🎨 Class prefix syntax (+, -, ~, ?)
-- 📦 ES6 modules and CDN distribution
+- Initial release
+- Core DOM manipulation features
+- Method chaining support
+- Class prefix syntax (+, -, ~, ?)
+- ES6 modules and CDN distribution
 
 ---
 
@@ -373,6 +373,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Made with ❤️ for developers who value simplicity and performance**
 
-[⭐ Star on GitHub](https://github.com/Bloechle/qry) • [🐛 Report Bug](https://github.com/Bloechle/qry/issues) • [💡 Request Feature](https://github.com/Bloechle/qry/issues)
+[Star on GitHub](https://github.com/Bloechle/qry) • [Report Bug](https://github.com/Bloechle/qry/issues) • [Request Feature](https://github.com/Bloechle/qry/issues)
 
 </div>
