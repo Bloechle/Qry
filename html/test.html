@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typst SVG demo</title>
+
+    <!-- All-in-one Typst bundle from jsDelivr -->
+    <script
+            type="module"
+            src="https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-all-in-one.ts@0.6.0/dist/esm/index.js"
+            id="typst"
+    ></script>
+</head>
+<body>
+<h1>Typst.ts minimal demo</h1>
+<p>Type some Typst code below:</p>
+
+<textarea id="input" style="width: 100%; height: 6em;"></textarea>
+<div id="content" style="margin-top: 1rem; border: 1px solid #ccc;"></div>
+
+<script>
+    const input = document.getElementById("input");
+    const content = document.getElementById("content");
+
+    // Initial Typst source
+    input.value = "Hello, Typst!";
+
+    document
+        .getElementById("typst")
+        .addEventListener("load", function () {
+            const compile = function (mainContent) {
+                // $typst is provided by the all-in-one bundle
+                $typst.svg({ mainContent }).then(svg => {
+                    console.log(`rendered! SvgElement { len: ${svg.length} }`);
+                    content.innerHTML = svg;
+                });
+            };
+
+            input.oninput = () => compile(input.value);
+            compile(input.value);
+        });
+</script>
+</body>
+</html>

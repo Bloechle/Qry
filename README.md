@@ -12,9 +12,9 @@
 - **Method chaining** - Fluent, readable API
 - **Modern browsers** - ES6+ with broad compatibility
 - **Unified API** - Single class handles elements and collections seamlessly
+- **Full JSDoc** - Complete IDE autocomplete and type hints
 
 ## At a Glance
-
 ```javascript
 // Before (Vanilla JS)
 document.getElementById('button').addEventListener('click', function() {
@@ -37,7 +37,6 @@ $('#button').click(() => {
 ```
 
 ### ES Modules
-
 ```javascript
 import $ from './Qry.js';
 // or
@@ -46,14 +45,11 @@ import {$, Qry} from './Qry.js';
 
 ### Direct Download
 Download `Qry.js` and include it in your project:
-
 ```html
-
 <script src="Qry.js"></script>
 ```
 
 ## Quick Start
-
 ```html
 <!DOCTYPE html>
 <html>
@@ -75,7 +71,6 @@ Download `Qry.js` and include it in your project:
 ## API Reference
 
 ### Element Selection
-
 ```javascript
 $('#myId')                        // ID selection (fastest)
 $('.myClass')                     // Class selection
@@ -85,7 +80,6 @@ $('#btn', iframeDoc)              // Custom document context
 ```
 
 ### Content Manipulation
-
 ```javascript
 // Text content
 $('#title').text()                // Get text
@@ -97,7 +91,6 @@ $('#content').html('<b>Bold</b>') // Set HTML
 ```
 
 ### CSS Classes (Intuitive Prefix Syntax)
-
 ```javascript
 $('.card').cls('+active')         // Add class
 $('.card').cls('-hidden')         // Remove class
@@ -109,7 +102,6 @@ $('.card').cls('+show -hidden ~selected')
 ```
 
 ### Attributes & Properties
-
 ```javascript
 // Single attribute
 $('#link').attr('href', 'https://example.com')
@@ -124,7 +116,6 @@ $('#img').attr({
 ```
 
 ### CSS Styles
-
 ```javascript
 // Single style
 $('.box').css('background', 'red')
@@ -141,7 +132,6 @@ const color = $('.box').css('backgroundColor')
 ```
 
 ### Event Handling
-
 ```javascript
 // Click shorthand
 $('#btn').click(e => console.log('Clicked!'))
@@ -154,10 +144,19 @@ $('#form').on('submit', e => {
 
 // Remove listeners
 $('#btn').off('click', handler)
+
+// Event delegation (NEW in v1.2.0)
+$('#list').delegate('.item', 'click', function(e) {
+    $(this).cls('~selected');  // Handle dynamically added items
+})
+
+// Trigger events programmatically (NEW in v1.2.0)
+$('#file-input').trigger('click')           // Trigger native event
+$('#form').trigger('submit')                // Submit form
+$('#cart').trigger('item-added', { id: 123 })  // Custom event with data
 ```
 
 ### DOM Manipulation
-
 ```javascript
 // Add content
 $('#container').append('<div>New content</div>')
@@ -168,7 +167,6 @@ $('.old-items').remove()
 ```
 
 ### Element Creation
-
 ```javascript
 // Create with properties
 const card = $.create('div', {
@@ -184,7 +182,6 @@ $.create('button', { text: 'Click me' })
 ```
 
 ### Form Elements
-
 ```javascript
 $('#name').val()              // Get value
 $('#name').val('John Doe')    // Set value
@@ -194,7 +191,6 @@ $('#submit').disable()        // Disable element
 ```
 
 ### Visibility & State
-
 ```javascript
 $('.modal').show()            // Show element
 $('.modal').hide()            // Hide element
@@ -207,14 +203,23 @@ if ($('#optional').exists) {
 ```
 
 ### DOM Traversal
-
 ```javascript
 $('#child').parent()          // Get parent element
 $('#container').find('.item') // Find children
+
+// Find closest ancestor (NEW in v1.2.0)
+$(e.target).closest('.card')  // Find parent card (including self)
+
+// Useful for event delegation
+$('#app').on('click', (e) => {
+    const card = $(e.target).closest('.card');
+    if (card.exists) {
+        card.cls('~selected');
+    }
+});
 ```
 
 ### Utility Methods
-
 ```javascript
 // DOM ready
 $.ready(() => {
@@ -228,7 +233,6 @@ const div = $.create('div', { class: 'box' });
 ## Method Chaining Power
 
 Build complex interactions with readable, fluent syntax:
-
 ```javascript
 $('#dialog')
     .cls('+modal +active -hidden')
@@ -243,7 +247,6 @@ $('#dialog')
 ## Single Elements vs Collections
 
 Qry automatically handles both scenarios with the same clean API:
-
 ```javascript
 // Works on single elements
 $('#unique-btn').text('Hello')
@@ -331,6 +334,33 @@ $('#load-more').click(async () => {
 });
 ```
 
+### Event Delegation for Dynamic Content
+```javascript
+// Handle clicks on items that may be added later
+$('#todo-list').delegate('.todo-item', 'click', function(e) {
+    $(this).cls('~completed');  // 'this' is the clicked item
+});
+
+// Add items dynamically - event handler still works!
+$.create('div', { 
+    class: 'todo-item',
+    text: 'New task' 
+}).append($('#todo-list'));
+```
+
+### File Input Triggering
+```javascript
+// Programmatically open file dialog
+$('#browse-btn').click(() => {
+    $('#file-input').trigger('click');
+});
+
+$('#file-input').on('change', (e) => {
+    const file = e.target.files[0];
+    console.log('Selected:', file.name);
+});
+```
+
 ## Try It Live
 
 Check out the interactive demo in `index.html` or visit our [CodePen examples](https://codepen.io/collection/qryjs).
@@ -358,7 +388,14 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Changelog
 
-### v1.1.0 (Latest)
+### v1.2.0 (Latest)
+- **NEW:** `trigger()` method for programmatic event triggering
+- **NEW:** `closest()` method for finding ancestor elements
+- **NEW:** `delegate()` method for event delegation on dynamic content
+- **IMPROVED:** Complete JSDoc documentation for all methods
+- **IMPROVED:** Better IDE autocomplete and type hints
+
+### v1.1.0
 - Enhanced element creation with property support
 - Improved collection handling
 - Better documentation and examples

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptoGait Analyzer - Qry</title>
+    <link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/svg/qry-logo-white.svg">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unifr: "#005395",
+                        optogait: "#10b981",
+                        dark: { 100: "#0a0a0a", 200: "#1a1a1a", 300: "#2d2d30", 400: "#3e3e42", 500: "#52525b" }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn { @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium; }
+            .btn-primary { @apply bg-optogait hover:bg-optogait/90 text-white focus:ring-2 focus:ring-optogait/50; }
+            .btn-secondary { @apply bg-unifr hover:bg-unifr/90 text-white focus:ring-2 focus:ring-unifr/50; }
+            .card { @apply bg-dark-200 border border-dark-300 rounded-xl p-6 shadow-lg; }
+            .metric-card { @apply bg-dark-300 border-l-4 rounded-lg p-4; }
+            .drop-zone { @apply border-2 border-dashed border-dark-400 rounded-xl bg-dark-200/50 transition-all; }
+            .drop-zone.active { @apply border-optogait bg-optogait/5; }
+        }
+
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@myriaddreamin/typst-all-in-one.ts@0.6.0/dist/esm/index.js" id="typst"></script>
+</head>
+
+<body class="bg-dark-100 text-gray-100 min-h-screen antialiased">
+
+<header class="bg-dark-200 border-b border-dark-300 sticky top-0 z-40 backdrop-blur-sm bg-dark-200/95">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-optogait rounded-lg flex items-center justify-center">
+                    <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold text-white">OptoGait Analyzer</h1>
+                    <p class="text-sm text-gray-400">Jump Test Analysis</p>
+                </div>
+            </div>
+            <div class="flex gap-3" id="header-actions" style="display: none;">
+                <button id="reset-btn" class="btn btn-secondary">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    Reset
+                </button>
+                <button id="download-pdf-btn" class="btn btn-primary">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+    <div id="drop-zone-container">
+        <div id="drop-zone" class="drop-zone min-h-96 flex items-center justify-center cursor-pointer">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-6 bg-dark-300 rounded-xl flex items-center justify-center">
+                    <i data-lucide="file-up" class="w-10 h-10 text-gray-400"></i>
+                </div>
+                <h2 class="text-2xl font-semibold mb-2">Drop OptoGait XML File</h2>
+                <p class="text-gray-400 mb-6">or click to browse</p>
+                <button id="browse-btn" class="btn btn-primary">
+                    <i data-lucide="folder-open" class="w-4 h-4"></i>
+                    Browse Files
+                </button>
+                <p class="text-xs text-gray-500 mt-4">Supports: CMJ, Squat Jump, Repeated Hop Test</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="results-container" style="display: none;">
+
+        <div id="athlete-info" class="card mb-6">
+            <h2 class="text-xl font-bold mb-4">Athlete Information</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm" id="athlete-data"></div>
+        </div>
+
+        <div id="tests-container"></div>
+    </div>
+
+    <div id="loading" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="card text-center">
+            <div class="w-8 h-8 border-2 border-gray-600 border-t-optogait rounded-full mx-auto mb-4 animate-spin"></div>
+            <p class="text-gray-300">Processing XML...</p>
+        </div>
+    </div>
+
+</main>
+
+<input type="file" id="file-input" accept=".xml" class="hidden">
+
+<script type="module">
+    import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js';
+    import { QryApp } from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/QryApp.js';
+
+    class OptoGaitAnalyzer extends QryApp {
+        #data = null;
+        #charts = [];
+
+        constructor() {
+            super({ title: 'OptoGait Analyzer', logLevel: 'info', autoRefreshIcons: true });
+            this.#waitForTypst();
+        }
+
+        #waitForTypst() {
+            // Wait for $typst to be available
+            const checkInterval = setInterval(() => {
+                if (window.$typst) {
+                    clearInterval(checkInterval);
+                    this.success('Typst loaded successfully!');
+                    this.#init();
+                }
+            }, 100);
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (!window.$typst) {
+                    clearInterval(checkInterval);
+                    this.warning('Typst not loaded - PDF export disabled');
+                    this.#init();
+                }
+            }, 10000);
+        }
+
+        #init() {
+            this.#setupDragDrop();
+            this.bindAll({
+                '#browse-btn': () => $('#file-input').el.click(),
+                '#reset-btn': () => this.#reset(),
+                '#download-pdf-btn': () => this.#downloadPDF(),
+                '#file-input': { event: 'change', handler: (e) => this.#handleFile(e) }
+            });
+            this.refreshIcons();
+        }
+
+        #setupDragDrop() {
+            const zone = $('#drop-zone');
+
+            zone.on('dragover', (e) => {
+                e.preventDefault();
+                zone.cls('+active');
+            });
+
+            zone.on('dragleave', (e) => {
+                if (!zone.el.contains(e.relatedTarget)) zone.cls('-active');
+            });
+
+            zone.on('drop', (e) => {
+                e.preventDefault();
+                zone.cls('-active');
+                const file = e.dataTransfer.files[0];
+                if (file?.name.endsWith('.xml')) this.#processFile(file);
+                else this.error('Please drop a valid XML file');
+            });
+
+            // Only bind click to browse button, not the entire zone
+        }
+
+        #handleFile(e) {
+            const file = e.target.files[0];
+            if (file) this.#processFile(file);
+            e.target.value = '';
+        }
+
+        async #processFile(file) {
+            $('#loading').cls('-hidden');
+
+            try {
+                const text = await file.text();
+                this.#data = this.#parseXML(text);
+
+                if (this.#data) {
+                    this.#renderResults();
+                    $('#drop-zone-container').hide();
+                    $('#results-container').show();
+                    $('#header-actions').show();
+                    this.success('File loaded successfully');
+                } else {
+                    this.error('Invalid OptoGait XML format');
+                }
+            } catch (error) {
+                this.error('Failed to parse XML: ' + error.message);
+            } finally {
+                $('#loading').cls('+hidden');
+            }
+        }
+
+        #parseXML(xmlText) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(xmlText, 'text/xml');
+
+            const NS = 'urn:schemas-microsoft-com:office:spreadsheet';
+            const rows = Array.from(doc.getElementsByTagNameNS(NS, 'Row'));
+
+            if (rows.length < 2) return null;
+
+            const getCellValue = (row, index) => {
+                const cells = Array.from(row.getElementsByTagNameNS(NS, 'Cell'));
+                let currentCol = 0;
+
+                for (const cell of cells) {
+                    const indexAttr = cell.getAttributeNS(NS, 'Index');
+                    if (indexAttr) currentCol = parseInt(indexAttr) - 1;
+
+                    if (currentCol === index) {
+                        const data = cell.getElementsByTagNameNS(NS, 'Data')[0];
+                        if (data?.textContent) {
+                            const type = data.getAttributeNS(NS, 'Type');
+                            return type === 'Number' ? parseFloat(data.textContent) : data.textContent;
+                        }
+                        return null;
+                    }
+                    currentCol++;
+                }
+                return null;
+            };
+
+            const dataRows = rows.slice(1);
+            if (!dataRows.length) return null;
+
+            const firstRow = dataRows[0];
+            const athlete = {
+                nom: getCellValue(firstRow, 0),
+                prenom: getCellValue(firstRow, 1),
+                date_naissance: getCellValue(firstRow, 3),
+                sexe: getCellValue(firstRow, 4),
+                poids: getCellValue(firstRow, 5),
+                hauteur: getCellValue(firstRow, 6)
+            };
+
+            const tests = {};
+
+            for (const row of dataRows) {
+                const testName = getCellValue(row, 20);
+                if (!testName) continue;
+
+                if (!tests[testName]) {
+                    tests[testName] = {
+                        name: testName,
+                        date: getCellValue(row, 21),
+                        heure: getCellValue(row, 22),
+                        jumps: []
+                    };
+                }
+
+                const jumpNum = getCellValue(row, 23);
+                if (jumpNum === null || (typeof jumpNum === 'string' && !jumpNum.match(/^\d+$/))) continue;
+
+                const flightTime = getCellValue(row, 28);
+                if (!flightTime || flightTime === 0) continue;
+
+                tests[testName].jumps.push({
+                    num: parseInt(jumpNum),
+                    flight: flightTime,
+                    contact: getCellValue(row, 29),
+                    height: getCellValue(row, 31)
+                });
+            }
+
+            for (const test of Object.values(tests)) {
+                const flights = test.jumps.map(j => j.flight);
+                const contacts = test.jumps.map(j => j.contact).filter(c => c);
+                const heights = test.jumps.map(j => j.height).filter(h => h);
+
+                test.stats = {
+                    count: test.jumps.length,
+                    flight: {
+                        mean: flights.reduce((a, b) => a + b, 0) / flights.length,
+                        max: Math.max(...flights),
+                        min: Math.min(...flights)
+                    },
+                    height: heights.length ? {
+                        mean: heights.reduce((a, b) => a + b, 0) / heights.length,
+                        max: Math.max(...heights),
+                        min: Math.min(...heights)
+                    } : null,
+                    contact: contacts.length ? {
+                        mean: contacts.reduce((a, b) => a + b, 0) / contacts.length,
+                        max: Math.max(...contacts),
+                        min: Math.min(...contacts)
+                    } : null
+                };
+
+                if (test.name.toLowerCase().includes('hop')) {
+                    test.stats.frequency = test.jumps.length / 15.0;
+                }
+            }
+
+            return { athlete, tests };
+        }
+
+        #renderResults() {
+            const { athlete, tests } = this.#data;
+
+            $('#athlete-data').html(`
+                <div><p class="text-gray-400 text-xs mb-1">Name</p><p class="font-semibold">${athlete.prenom} ${athlete.nom}</p></div>
+                <div><p class="text-gray-400 text-xs mb-1">Birth Date</p><p class="font-semibold">${athlete.date_naissance}</p></div>
+                <div><p class="text-gray-400 text-xs mb-1">Sex</p><p class="font-semibold">${athlete.sexe}</p></div>
+                <div><p class="text-gray-400 text-xs mb-1">Weight</p><p class="font-semibold">${athlete.poids} kg</p></div>
+                <div><p class="text-gray-400 text-xs mb-1">Height</p><p class="font-semibold">${athlete.hauteur} cm</p></div>
+            `);
+
+            let testsHTML = '';
+            let chartId = 0;
+
+            for (const test of Object.values(tests)) {
+                const isHop = test.name.toLowerCase().includes('hop');
+                const chartIdStr = `chart-${chartId++}`;
+
+                let metricsHTML = `
+                    <div class="metric-card border-blue-500">
+                        <p class="text-gray-400 text-xs mb-1">Avg Flight Time</p>
+                        <p class="text-2xl font-bold text-blue-400">${test.stats.flight.mean.toFixed(3)}<span class="text-sm"> s</span></p>
+                    </div>
+                `;
+
+                if (test.stats.contact) {
+                    metricsHTML += `
+                        <div class="metric-card border-orange-500">
+                            <p class="text-gray-400 text-xs mb-1">Avg Contact Time</p>
+                            <p class="text-2xl font-bold text-orange-400">${test.stats.contact.mean.toFixed(3)}<span class="text-sm"> s</span></p>
+                        </div>
+                    `;
+                }
+
+                if (test.stats.height) {
+                    metricsHTML += `
+                        <div class="metric-card border-green-500">
+                            <p class="text-gray-400 text-xs mb-1">Avg Height</p>
+                            <p class="text-2xl font-bold text-green-400">${test.stats.height.mean.toFixed(1)}<span class="text-sm"> cm</span></p>
+                        </div>
+                        <div class="metric-card border-purple-500">
+                            <p class="text-gray-400 text-xs mb-1">Best Jump</p>
+                            <p class="text-2xl font-bold text-purple-400">${test.stats.height.max.toFixed(1)}<span class="text-sm"> cm</span></p>
+                        </div>
+                    `;
+                }
+
+                if (test.stats.frequency) {
+                    metricsHTML += `
+                        <div class="metric-card border-indigo-500">
+                            <p class="text-gray-400 text-xs mb-1">Frequency</p>
+                            <p class="text-2xl font-bold text-indigo-400">${test.stats.frequency.toFixed(2)}<span class="text-sm"> /s</span></p>
+                        </div>
+                    `;
+                }
+
+                let tableRows = '';
+                for (const jump of test.jumps) {
+                    const contact = jump.contact ? jump.contact.toFixed(3) : '-';
+                    const height = jump.height ? jump.height.toFixed(1) : '-';
+
+                    if (isHop) {
+                        tableRows += `<tr class="hover:bg-dark-300/50"><td class="px-4 py-2">${jump.num}</td><td class="px-4 py-2 text-right">${jump.flight.toFixed(3)}</td><td class="px-4 py-2 text-right">${contact}</td><td class="px-4 py-2 text-right font-semibold">${height}</td></tr>`;
+                    } else {
+                        tableRows += `<tr class="hover:bg-dark-300/50"><td class="px-4 py-2">${jump.num}</td><td class="px-4 py-2 text-right">${jump.flight.toFixed(3)}</td><td class="px-4 py-2 text-right font-semibold">${height}</td></tr>`;
+                    }
+                }
+
+                const tableHeaders = isHop
+                    ? '<tr><th class="px-4 py-3 text-left">#</th><th class="px-4 py-3 text-right">Flight (s)</th><th class="px-4 py-3 text-right">Contact (s)</th><th class="px-4 py-3 text-right">Height (cm)</th></tr>'
+                    : '<tr><th class="px-4 py-3 text-left">#</th><th class="px-4 py-3 text-right">Flight (s)</th><th class="px-4 py-3 text-right">Height (cm)</th></tr>';
+
+                testsHTML += `
+                    <div class="card mb-6">
+                        <h2 class="text-xl font-bold mb-2">${test.name}</h2>
+                        <p class="text-sm text-gray-400 mb-4">${test.date} at ${test.heure}</p>
+                        <div class="grid grid-cols-2 md:grid-cols-${test.stats.frequency ? 5 : 4} gap-4 mb-6">
+                            ${metricsHTML}
+                        </div>
+                        <div class="bg-dark-300 rounded-lg p-4 mb-4">
+                            <canvas id="${chartIdStr}"></canvas>
+                        </div>
+                        <div class="bg-dark-300 rounded-lg overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-dark-400">${tableHeaders}</thead>
+                                <tbody class="divide-y divide-dark-400">${tableRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            $('#tests-container').html(testsHTML);
+            this.refreshIcons();
+
+            setTimeout(() => this.#renderCharts(), 100);
+        }
+
+        #renderCharts() {
+            this.#charts.forEach(c => c.destroy());
+            this.#charts = [];
+
+            let chartId = 0;
+            for (const test of Object.values(this.#data.tests)) {
+                const canvas = document.getElementById(`chart-${chartId++}`);
+                if (!canvas) continue;
+
+                const isHop = test.name.toLowerCase().includes('hop');
+
+                if (isHop && test.stats.contact) {
+                    this.#charts.push(new Chart(canvas, {
+                        type: 'line',
+                        data: {
+                            labels: test.jumps.map(j => j.num),
+                            datasets: [
+                                {
+                                    label: 'Flight Time (s)',
+                                    data: test.jumps.map(j => j.flight),
+                                    borderColor: 'rgb(59, 130, 246)',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    tension: 0.4
+                                },
+                                {
+                                    label: 'Contact Time (s)',
+                                    data: test.jumps.map(j => j.contact),
+                                    borderColor: 'rgb(251, 146, 60)',
+                                    backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                                    tension: 0.4
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { labels: { color: '#d1d5db' } } },
+                            scales: {
+                                y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                                x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                            }
+                        }
+                    }));
+                } else if (test.stats.height) {
+                    this.#charts.push(new Chart(canvas, {
+                        type: 'bar',
+                        data: {
+                            labels: test.jumps.map(j => `Jump ${j.num}`),
+                            datasets: [{
+                                label: 'Height (cm)',
+                                data: test.jumps.map(j => j.height),
+                                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                                borderColor: 'rgb(16, 185, 129)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                                x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                            }
+                        }
+                    }));
+                }
+            }
+        }
+
+        #reset() {
+            this.#data = null;
+            this.#charts.forEach(c => c.destroy());
+            this.#charts = [];
+            $('#results-container').hide();
+            $('#drop-zone-container').show();
+            $('#header-actions').hide();
+            this.info('Reset complete');
+        }
+
+        async #downloadPDF() {
+            if (!window.$typst) {
+                this.error('Typst not loaded - cannot generate PDF');
+                return;
+            }
+
+            try {
+                $('#download-pdf-btn').attr('disabled', 'true');
+                $('#download-pdf-btn').html('<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Generating...');
+                this.refreshIcons();
+
+                this.info('Generating Typst code...');
+                const typstCode = this.#generateTypstReport();
+                this.logger.info('Typst code length:', typstCode.length);
+
+                // Log first 500 chars of Typst code for debugging
+                this.logger.debug('Typst code preview:', typstCode.substring(0, 500));
+
+                this.info('Compiling PDF with Typst...');
+
+                // Try the exact same way as qry-visa
+                const pdfData = await window.$typst.pdf({
+                    mainContent: typstCode
+                });
+
+                if (!pdfData) {
+                    throw new Error('PDF data is null or undefined');
+                }
+
+                this.info('PDF compiled successfully, size:', pdfData.byteLength || pdfData.length);
+
+                const blob = new Blob([pdfData], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const name = `${this.#data.athlete.prenom}_${this.#data.athlete.nom}`.replace(/\s+/g, '_');
+                a.download = `OptoGait_${name}_${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                this.success('PDF downloaded!');
+
+            } catch (error) {
+                this.error('PDF generation failed');
+                this.logger.error('PDF error object:', error);
+                this.logger.error('Error type:', typeof error);
+                this.logger.error('Error keys:', error ? Object.keys(error) : 'null');
+
+                if (error && error.message) {
+                    this.logger.error('Error message:', error.message);
+                }
+                if (error && error.stack) {
+                    this.logger.error('Error stack:', error.stack);
+                }
+
+                // Fallback: download .typ file for debugging
+                try {
+                    this.info('Downloading Typst source for debugging...');
+                    const typstCode = this.#generateTypstReport();
+                    const blob = new Blob([typstCode], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const name = `${this.#data.athlete.prenom}_${this.#data.athlete.nom}`.replace(/\s+/g, '_');
+                    a.download = `OptoGait_${name}_DEBUG.typ`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    this.warning('Typst source downloaded - check for syntax errors');
+                } catch (e) {
+                    this.error('Failed to download fallback file');
+                    this.logger.error('Fallback error:', e);
+                }
+
+            } finally {
+                $('#download-pdf-btn').attr('disabled', null);
+                $('#download-pdf-btn').html('<i data-lucide="download" class="w-4 h-4"></i> Download PDF');
+                this.refreshIcons();
+            }
+        }
+
+        #escapeTypst(text) {
+            if (!text) return '';
+            // Escape special Typst characters
+            return String(text)
+                .replace(/\\/g, '\\\\')  // Backslash must be first
+                .replace(/#/g, '\\#')
+                .replace(/\$/g, '\\$')
+                .replace(/@/g, '\\@')
+                .replace(/</g, '\\<')
+                .replace(/>/g, '\\>');
+        }
+
+        #generateTypstReport() {
+            const { athlete, tests } = this.#data;
+
+            // Test with minimal code first
+            const minimal = `#set page(paper: "a4", margin: 2cm)
+#set text(font: "New Computer Modern", size: 11pt)
+
+= OptoGait Analysis Report
+
+*Athlete:* ${athlete.prenom} ${athlete.nom}
+
+Birth Date: ${athlete.date_naissance}
+
+Weight: ${athlete.poids} kg
+
+Height: ${athlete.hauteur} cm
+`;
+
+            // If you want to test minimal version, uncomment this:
+            // return minimal;
+
+            // Escape athlete data
+            const athleteName = this.#escapeTypst(`${athlete.prenom} ${athlete.nom}`);
+            const birthDate = this.#escapeTypst(athlete.date_naissance);
+
+            let testsContent = '';
+            for (const test of Object.values(tests)) {
+                const isHop = test.name.toLowerCase().includes('hop');
+                const testName = this.#escapeTypst(test.name);
+                const testDate = this.#escapeTypst(test.date);
+                const testTime = this.#escapeTypst(test.heure);
+
+                testsContent += `
+== ${testName}
+
+Date: ${testDate} at ${testTime}
+
+*Flight Time:* ${test.stats.flight.mean.toFixed(3)} s (avg), ${test.stats.flight.max.toFixed(3)} s (max), ${test.stats.flight.min.toFixed(3)} s (min)
+
+`;
+
+                if (test.stats.height) {
+                    testsContent += `*Height:* ${test.stats.height.mean.toFixed(1)} cm (avg), ${test.stats.height.max.toFixed(1)} cm (max), ${test.stats.height.min.toFixed(1)} cm (min)
+
+`;
+                }
+
+                if (test.stats.contact) {
+                    testsContent += `*Contact Time:* ${test.stats.contact.mean.toFixed(3)} s (avg), ${test.stats.contact.max.toFixed(3)} s (max), ${test.stats.contact.min.toFixed(3)} s (min)
+
+`;
+                }
+
+                if (test.stats.frequency) {
+                    testsContent += `*Frequency:* ${test.stats.frequency.toFixed(2)} jumps/second
+
+`;
+                }
+
+                // Simple table without complex syntax
+                testsContent += `*Jump Data:*
+
+`;
+
+                for (const j of test.jumps) {
+                    const contact = j.contact ? j.contact.toFixed(3) : '-';
+                    const height = j.height ? j.height.toFixed(1) : '-';
+
+                    if (isHop) {
+                        testsContent += `Jump ${j.num}: Flight ${j.flight.toFixed(3)}s, Contact ${contact}s, Height ${height}cm\n\n`;
+                    } else {
+                        testsContent += `Jump ${j.num}: Flight ${j.flight.toFixed(3)}s, Height ${height}cm\n\n`;
+                    }
+                }
+            }
+
+            // Calculate CMJ/SJ ratio if both exist
+            let ratioSection = '';
+            const cmjTest = Object.values(tests).find(t => t.name.toUpperCase().includes('CMJ'));
+            const sjTest = Object.values(tests).find(t => t.name.toUpperCase().includes('SQUAT'));
+
+            if (cmjTest?.stats.height && sjTest?.stats.height) {
+                const ratio = (cmjTest.stats.height.mean / sjTest.stats.height.mean) * 100;
+                ratioSection = `
+== Performance Analysis
+
+*CMJ/SJ Ratio:* ${ratio.toFixed(1)}%
+
+This ratio indicates the athlete's ability to utilize the stretch-shortening cycle.
+
+`;
+            }
+
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            return `#set page(paper: "a4", margin: 2cm)
+#set text(font: "New Computer Modern", size: 11pt)
+
+#align(center)[
+  #text(size: 24pt, weight: "bold")[OptoGait Analysis Report]
+
+  #v(0.5em)
+
+  #text(size: 16pt)[${athleteName}]
+
+  #v(0.3em)
+
+  #text(size: 10pt, fill: gray)[${dateStr}]
+]
+
+#v(1em)
+#line(length: 100%)
+#v(1em)
+
+= Athlete Information
+
+*Birth Date:* ${birthDate}
+
+*Sex:* ${athlete.sexe}
+
+*Weight:* ${athlete.poids} kg
+
+*Height:* ${athlete.hauteur} cm
+
+#v(1.5em)
+
+= Test Results
+
+${testsContent}
+${ratioSection}
+#v(1fr)
+
+#align(center)[
+  #line(length: 100%)
+  #v(0.3em)
+  #text(size: 9pt, fill: gray)[OptoGait Analysis | Qry Analyzer ${today.getFullYear()}]
+]`;
+        }
+    }
+
+    $.ready(() => new OptoGaitAnalyzer());
+</script>
+</body>
+</html>

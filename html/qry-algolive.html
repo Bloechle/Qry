@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AlgoLive - Sorting Visualizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#005395',
+                        accent: '#0891b2',
+                        dark: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Qry.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/QryApp.js" type="module"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .live-bar {
+            display: inline-block;
+            position: absolute;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            background-color 0.2s ease,
+            opacity 0.2s ease;
+            border-radius: 2px 2px 0 0;
+        }
+
+        /* Sophisticated bar colors with UniFR blue theme */
+        .bar-default {
+            background: linear-gradient(to top, #005395, #0077c2);
+            box-shadow: 0 1px 3px rgba(0, 83, 149, 0.4);
+        }
+        .bar-comparing {
+            background: linear-gradient(to top, #0891b2, #06b6d4);
+            box-shadow: 0 2px 4px rgba(8, 145, 178, 0.4);
+        }
+        .bar-sorted {
+            background: linear-gradient(to top, #65a30d, #84cc16);
+            box-shadow: 0 1px 3px rgba(101, 163, 13, 0.4);
+        }
+        .bar-pivot {
+            background: linear-gradient(to top, #ea580c, #f97316);
+            box-shadow: 0 2px 4px rgba(234, 88, 12, 0.4);
+        }
+        .bar-smaller {
+            background: linear-gradient(to top, #f97316, #fb923c);
+            box-shadow: 0 2px 4px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Subtle animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #e0f2fe;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #0891b2;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #005395;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50/50 to-cyan-50/30">
+
+<!-- Main Container -->
+<div class="container mx-auto px-4 py-12 max-w-6xl">
+
+    <!-- Header -->
+    <header class="text-center mb-8 fade-in">
+        <h1 class="text-5xl font-light text-slate-900 mb-3 tracking-tight">
+            Algo<span class="font-semibold text-primary">Live</span>
+        </h1>
+        <p class="text-slate-700 text-lg font-light mb-2" id="algo-subtitle">
+            Interactive Sorting Algorithm Visualizer
+        </p>
+        <p class="text-slate-600 text-sm font-mono" id="algo-complexity">
+            Select an algorithm to begin
+        </p>
+    </header>
+
+    <main id="app" class="fade-in space-y-6"></main>
+</div>
+
+<script type="module">
+    import { QryApp } from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/QryApp.js';
+
+    // ============================================
+    // Algorithm complexity information
+    // ============================================
+    const algoInfo = {
+        'InsertionSort': {
+            name: 'Insertion Sort',
+            best: 'O(n)',
+            average: 'O(n²)',
+            worst: 'O(n²)',
+            space: 'O(1)',
+            stable: 'Yes',
+            description: 'Builds the sorted array one element at a time'
+        },
+        'SelectionSort': {
+            name: 'Selection Sort',
+            best: 'O(n²)',
+            average: 'O(n²)',
+            worst: 'O(n²)',
+            space: 'O(1)',
+            stable: 'No',
+            description: 'Finds minimum element and places it at the beginning'
+        },
+        'BubbleSort': {
+            name: 'Bubble Sort',
+            best: 'O(n)',
+            average: 'O(n²)',
+            worst: 'O(n²)',
+            space: 'O(1)',
+            stable: 'Yes',
+            description: 'Repeatedly swaps adjacent elements in wrong order'
+        },
+        'ShellSort': {
+            name: 'Shell Sort',
+            best: 'O(n log n)',
+            average: 'O(n⁴/³)',
+            worst: 'O(n²)',
+            space: 'O(1)',
+            stable: 'No',
+            description: 'Optimized insertion sort with decreasing gaps'
+        },
+        'QuickSort': {
+            name: 'Quick Sort',
+            best: 'O(n log n)',
+            average: 'O(n log n)',
+            worst: 'O(n²)',
+            space: 'O(log n)',
+            stable: 'No',
+            description: 'Divide-and-conquer using pivot partitioning'
+        },
+        'MergeSort': {
+            name: 'Merge Sort',
+            best: 'O(n log n)',
+            average: 'O(n log n)',
+            worst: 'O(n log n)',
+            space: 'O(n)',
+            stable: 'Yes',
+            description: 'Recursively divides and merges sorted subarrays'
+        }
+    };
+
+    // ============================================
+    // Supporting Classes
+    // ============================================
+    class LiveCall {
+        constructor(left, right) {
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+    class LiveTimer {
+        constructor() {
+            this.intervalId = -1;
+            this.delayInMillis = 1000;
+        }
+
+        cancel() {
+            if (this.intervalId !== -1) {
+                clearInterval(this.intervalId);
+                this.intervalId = -1;
+            }
+            return this;
+        }
+
+        start(handler, delayInMillis = 1000) {
+            this.cancel();
+            this.handler = handler;
+            this.delayInMillis = delayInMillis;
+            this.intervalId = setInterval(handler, delayInMillis);
+        }
+
+        fire(handler, delayInMillis = 1000) {
+            this.cancel();
+            this.handler = handler;
+            this.delayInMillis = delayInMillis;
+            setTimeout(handler, delayInMillis);
+        }
+
+        fireAgain() {
+            this.cancel();
+            setTimeout(this.handler, this.delayInMillis);
+        }
+    }
+
+    // ============================================
+    // LiveBar - Individual bar element
+    // ============================================
+    class LiveBar {
+        constructor(value) {
+            this.element = $.create('div', { class: 'live-bar bar-default' });
+            this.value = value;
+            this.colorClass = 'bar-default';
+        }
+
+        setFill(colorName) {
+            const colorMap = {
+                'dodgerblue': 'default',
+                'orange': 'comparing',
+                'forestgreen': 'sorted',
+                'default': 'default',
+                'comparing': 'comparing',
+                'sorted': 'sorted',
+                'pivot': 'pivot',
+                'smaller': 'smaller'
+            };
+
+            const mappedColor = colorMap[colorName] || colorName;
+            const newClass = 'bar-' + mappedColor;
+
+            this.element.cls('-bar-default -bar-comparing -bar-sorted -bar-pivot -bar-smaller');
+            this.element.cls('+' + newClass);
+            this.colorClass = newClass;
+            return this;
+        }
+
+        border(color) {
+            if (color === 'transparent' || !color) {
+                this.element.css('outline', 'none');
+            } else {
+                this.element.css('outline', '2px solid ' + color);
+                this.element.css('outline-offset', '-2px');
+            }
+            return this;
+        }
+
+        left(value) {
+            this.element.css('left', value + 'px');
+            return this;
+        }
+
+        top(value) {
+            this.element.css('top', value + 'px');
+            return this;
+        }
+
+        width(value) {
+            this.element.css('width', value + 'px');
+            return this;
+        }
+
+        height(value) {
+            this.element.css('height', value + 'px');
+            return this;
+        }
+    }
+
+    // ============================================
+    // LiveChart - Container for bars
+    // ============================================
+    class LiveChart {
+        constructor() {
+            this.element = $.create('div', {
+                class: 'relative bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden mx-auto'
+            });
+            this.bars = [];
+        }
+
+        createBars(nbOfBars) {
+            this.element.html('');
+            this.bars = [];
+            for (let i = 0; i < nbOfBars; i++) {
+                const bar = new LiveBar(Math.random());
+                this.bars.push(bar);
+                this.element.append(bar.element);
+            }
+            this.reset('default');
+            this.refresh();
+        }
+
+        refresh() {
+            const containerWidth = Math.min(window.innerWidth - 80, 1152);
+            const chartWidth = containerWidth - 32;
+            const chartHeight = Math.min(500, window.innerHeight * 0.5);
+            this.barWidth = (chartWidth - 40) / this.bars.length;
+
+            this.element.css({
+                width: chartWidth + 'px',
+                height: chartHeight + 'px'
+            });
+
+            for (let i = 0; i < this.bars.length; i++) {
+                const bar = this.bars[i];
+                const barHeight = bar.value * (chartHeight - 60) + 30;
+
+                bar.left(i * this.barWidth + 20);
+                bar.top(chartHeight - barHeight - 20);
+                bar.width(this.barWidth - 3);
+                bar.height(barHeight);
+            }
+        }
+
+        reset(color) {
+            for (let i = 0; i < this.bars.length; i++) {
+                this.bars[i].setFill(color);
+                this.bars[i].border('transparent');
+            }
+        }
+
+        swap(i, j) {
+            const tmp = this.bars[j];
+            this.bars[j] = this.bars[i];
+            this.bars[i] = tmp;
+            this.refresh();
+        }
+    }
+
+    // ============================================
+    // LiveSort - Main application
+    // ============================================
+    class LiveSort extends QryApp {
+        constructor() {
+            super({
+                title: 'AlgoLive',
+                logLevel: 'warn',
+                autoRefreshIcons: false
+            });
+
+            this.timer = new LiveTimer();
+            this.shouldStop = false;
+            this.currentAlgorithm = 'QuickSort';
+            this.nbOfBars = 48;
+            this.delayMillis = 50;
+
+            this.buildUI();
+            this.chart.createBars(this.nbOfBars);
+            this.updateHeader(this.currentAlgorithm);
+
+            window.addEventListener('resize', () => this.chart.refresh());
+        }
+
+        buildUI() {
+            const container = $('#app');
+
+            this.chart = new LiveChart();
+            this.controlsContainer = this.buildControls();
+
+            container.append(this.chart.element);
+            container.append(this.controlsContainer);
+        }
+
+        buildControls() {
+            const container = $.create('div', {
+                class: 'flex flex-wrap items-end gap-3 justify-center mt-6'
+            });
+
+            const algoGroup = $.create('div', { class: 'flex-1 min-w-[180px] max-w-[220px]' });
+            const algoLabel = $.create('label', {
+                class: 'block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wider',
+                text: 'Algorithm'
+            });
+            this.algoSelect = $.create('select', {
+                class: 'w-full px-3 py-2 bg-white border border-blue-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200'
+            });
+            ['QuickSort', 'MergeSort', 'ShellSort', 'InsertionSort', 'SelectionSort', 'BubbleSort'].forEach(algo => {
+                const option = $.create('option', { text: algo, value: algo });
+                this.algoSelect.append(option);
+            });
+            this.algoSelect.val('QuickSort');
+            this.algoSelect.on('change', () => {
+                this.currentAlgorithm = this.algoSelect.val();
+                this.updateHeader(this.currentAlgorithm);
+            });
+            algoGroup.append(algoLabel);
+            algoGroup.append(this.algoSelect);
+
+            const sizeGroup = $.create('div', { class: 'flex-1 min-w-[140px] max-w-[160px]' });
+            const sizeLabel = $.create('label', {
+                class: 'block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wider',
+                text: 'Size'
+            });
+            this.sizeSelect = $.create('select', {
+                class: 'w-full px-3 py-2 bg-white border border-blue-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200'
+            });
+            ['16', '32', '48', '64', '96', '128'].forEach(size => {
+                const option = $.create('option', { text: size, value: size });
+                this.sizeSelect.append(option);
+            });
+            this.sizeSelect.val('48');
+            this.sizeSelect.on('change', () => {
+                this.nbOfBars = parseInt(this.sizeSelect.val());
+            });
+            sizeGroup.append(sizeLabel);
+            sizeGroup.append(this.sizeSelect);
+
+            const speedGroup = $.create('div', { class: 'flex-1 min-w-[140px] max-w-[160px]' });
+            const speedLabel = $.create('label', {
+                class: 'block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wider',
+                text: 'Speed'
+            });
+            this.speedSelect = $.create('select', {
+                class: 'w-full px-3 py-2 bg-white border border-blue-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200'
+            });
+            [
+                { label: 'Very Slow', value: '1000' },
+                { label: 'Slow', value: '300' },
+                { label: 'Medium', value: '50' },
+                { label: 'Fast', value: '10' },
+                { label: 'Very Fast', value: '1' }
+            ].forEach(speed => {
+                const option = $.create('option', { text: speed.label, value: speed.value });
+                this.speedSelect.append(option);
+            });
+            this.speedSelect.val('50');
+            this.speedSelect.on('change', () => {
+                this.delayMillis = parseInt(this.speedSelect.val());
+            });
+            speedGroup.append(speedLabel);
+            speedGroup.append(this.speedSelect);
+
+            this.sortBtn = $.create('button', {
+                class: 'px-6 py-2 bg-primary hover:bg-[#004178] text-white font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm',
+                text: 'Sort'
+            }).click(() => this.play());
+
+            this.stopBtn = $.create('button', {
+                class: 'px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm',
+                text: 'Stop'
+            }).click(() => this.stop());
+            this.stopBtn.attr('disabled', 'true');
+
+            this.shuffleBtn = $.create('button', {
+                class: 'px-6 py-2 bg-white hover:bg-blue-50 text-slate-700 font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-blue-200 text-sm shadow-sm',
+                text: 'Shuffle'
+            }).click(() => this.shuffle());
+
+            container.append(algoGroup);
+            container.append(sizeGroup);
+            container.append(speedGroup);
+            container.append(this.sortBtn);
+            container.append(this.stopBtn);
+            container.append(this.shuffleBtn);
+
+            return container;
+        }
+
+        updateHeader(algorithm) {
+            const info = algoInfo[algorithm];
+            if (!info) return;
+
+            $('#algo-subtitle').text(info.name + ' – ' + info.description);
+            $('#algo-complexity').text('Best: ' + info.best + ' • Average: ' + info.average + ' • Worst: ' + info.worst + ' • Space: ' + info.space);
+        }
+
+        setRunning(running) {
+            if (running) {
+                this.sortBtn.attr('disabled', 'true');
+                this.shuffleBtn.attr('disabled', 'true');
+                this.algoSelect.attr('disabled', 'true');
+                this.sizeSelect.attr('disabled', 'true');
+                this.speedSelect.attr('disabled', null);
+                this.stopBtn.attr('disabled', null);
+            } else {
+                this.sortBtn.attr('disabled', null);
+                this.shuffleBtn.attr('disabled', null);
+                this.algoSelect.attr('disabled', null);
+                this.sizeSelect.attr('disabled', null);
+                this.stopBtn.attr('disabled', 'true');
+            }
+        }
+
+        shuffle() {
+            this.chart.createBars(this.nbOfBars);
+        }
+
+        stop() {
+            this.shouldStop = true;
+            this.timer.cancel();
+            this.setRunning(false);
+            this.chart.reset('default');
+        }
+
+        play() {
+            this.shouldStop = false;
+            this.chart.createBars(this.nbOfBars);
+            this.setRunning(true);
+
+            const algorithmMap = {
+                'InsertionSort': () => this.insertionSort(),
+                'SelectionSort': () => this.selectionSort(),
+                'BubbleSort': () => this.bubbleSort(),
+                'ShellSort': () => this.shellSort(),
+                'QuickSort': () => this.quickSort(),
+                'MergeSort': () => this.mergeSort()
+            };
+
+            algorithmMap[this.currentAlgorithm]();
+        }
+
+        done() {
+            if (this.shouldStop) return;
+            this.timer.cancel();
+            this.chart.reset('sorted');
+            this.setRunning(false);
+        }
+
+        // ============================================
+        // SORTING ALGORITHMS
+        // Visual Language Guide for Students:
+        //
+        // COLORS:
+        // - Blue (comparing): Elements being compared/evaluated
+        // - Orange (smaller): Element that's "out of place" or being moved
+        // - Orange/Red (pivot): Pivot element in QuickSort
+        // - Green (sorted): Elements in their final sorted position
+        // - Gray (default): Unsorted, not currently active
+        //
+        // BORDERS:
+        // - Cyan border: Current iteration position / element being tracked
+        // - Orange border: Element being moved or identified as larger/smaller
+        // - No border: Not currently involved in comparison
+        //
+        // ALGORITHM-SPECIFIC:
+        // - Insertion Sort: Cyan border = element being inserted, Orange = elements being shifted
+        // - Selection Sort: Cyan border = current position checking, Orange = current minimum found
+        // - Bubble Sort: Both compared elements get borders, larger one turns orange before swap
+        // - Shell Sort: Cyan border = element being inserted in gap, Orange = element being compared
+        // - Quick Sort: Orange pivot, cyan borders on partition boundaries
+        // - Merge Sort: Cyan borders on merge range boundaries, orange on element being selected
+        // ============================================
+
+        insertionSort() {
+            const bars = this.chart.bars;
+            let bar = bars[0];
+            let i = 1, j = i, loop = false;
+
+            this.timer.start(() => {
+                if (this.shouldStop) { this.done(); return; }
+                if (i < bars.length || loop) {
+                    if (!loop) {
+                        // Mark previous bar as sorted
+                        if (i > 0) {
+                            bars[i - 1].setFill('sorted');
+                            bars[i - 1].border('transparent');
+                        }
+
+                        // Start inserting new element
+                        bar = bars[i];
+                        bar.setFill('comparing');
+                        bar.border('#0891b2');
+                        j = i;
+                        loop = true;
+                    }
+
+                    if (loop && j > 0 && bars[j - 1].value > bars[j].value) {
+                        // Highlight the element that's larger (will be shifted right)
+                        bars[j - 1].setFill('smaller');
+                        bars[j - 1].border('#f97316');
+
+                        // Perform swap
+                        this.chart.swap(j - 1, j);
+                        j--;
+
+                        // Update border on the element being inserted
+                        if (j >= 0) {
+                            bars[j].border('#0891b2');
+                        }
+                    } else {
+                        // Found correct position
+                        if (bar && j < bars.length) {
+                            bars[j].setFill('sorted');
+                            bars[j].border('transparent');
+                        }
+
+                        // Clean up any orange bars
+                        for (let k = 0; k < i; k++) {
+                            if (bars[k].colorClass === 'bar-smaller') {
+                                bars[k].setFill('sorted');
+                            }
+                            bars[k].border('transparent');
+                        }
+
+                        loop = false;
+                        i++;
+                    }
+                } else this.done();
+            }, this.delayMillis);
+        }
+
+        selectionSort() {
+            const bars = this.chart.bars;
+            let bar = bars[0], i = 0, j = bars.length, min = 0;
+            this.timer.start(() => {
+                if (this.shouldStop) { this.done(); return; }
+                if (i < bars.length || j < bars.length) {
+                    if (j === bars.length) {
+                        // Starting new pass - reset all unsorted bars
+                        for (let k = i; k < bars.length; k++) {
+                            bars[k].setFill('default');
+                            bars[k].border('transparent');
+                        }
+                        min = i;
+                        bar = bars[i];
+                        j = i;
+                        // Mark initial minimum
+                        bars[min].setFill('smaller');
+                        bars[min].border('#f97316');
+                    }
+
+                    // Current bar being checked (cyan border)
+                    if (bar && bar !== bars[min]) {
+                        bar.border('transparent');
+                        bar.setFill('default');
+                    }
+                    bar = bars[j];
+
+                    // Highlight current element being checked (but don't override minimum)
+                    if (j !== min) {
+                        bar.border('#0891b2');
+                        bar.setFill('comparing');
+                    }
+
+                    // Check if this is the new minimum
+                    if (bar.value < bars[min].value) {
+                        // Reset previous minimum to default
+                        bars[min].setFill('default');
+                        bars[min].border('transparent');
+
+                        // Set new minimum to orange (keep it!)
+                        min = j;
+                        bars[min].setFill('smaller');
+                        bars[min].border('#f97316');
+                    }
+
+                    j++;
+                    if (j === bars.length) {
+                        // Clear all highlighting
+                        for (let k = i; k < bars.length; k++) {
+                            bars[k].border('transparent');
+                        }
+
+                        // Swap minimum to sorted position
+                        this.chart.swap(i, min);
+                        bars[i].setFill('sorted');
+                        bars[i].border('transparent');
+                        i++;
+                    }
+                } else this.done();
+            }, this.delayMillis);
+        }
+
+        bubbleSort() {
+            const bars = this.chart.bars;
+            let bar = bars[0], i = bars.length - 1, j = bars.length;
+            this.timer.start(() => {
+                if (this.shouldStop) { this.done(); return; }
+                let doSwap = true;
+                if (i > 0 && doSwap) {
+                    if (j > i) {
+                        doSwap = false;
+                        j = 1;
+                    }
+
+                    // Reset all unsorted bars
+                    for (let k = 0; k < i; k++) {
+                        bars[k].setFill('default');
+                        bars[k].border('transparent');
+                    }
+
+                    // Clear previous comparison
+                    bar.border('transparent');
+                    bar.setFill('default');
+                    bar = bars[j];
+
+                    // Highlight both elements being compared
+                    bars[j - 1].border('#0891b2');
+                    bars[j - 1].setFill('comparing');
+                    bars[j].border('#0891b2');
+                    bars[j].setFill('comparing');
+
+                    // If swap needed, highlight the larger element in orange
+                    if (bars[j - 1].value > bars[j].value) {
+                        bars[j - 1].setFill('smaller');
+                        bars[j - 1].border('#f97316');
+                        this.chart.swap(j - 1, j);
+                        doSwap = true;
+                    }
+
+                    j++;
+                    if (doSwap && i < bars.length - 1) {
+                        bars[i + 1].setFill('sorted');
+                        bars[i + 1].border('transparent');
+                    }
+                    if (j > i) i--;
+                } else this.done();
+            }, this.delayMillis);
+        }
+
+        shellSort() {
+            const bars = this.chart.bars;
+            let k = Math.floor(bars.length / 4), i = k, t = i;
+            this.timer.start(() => {
+                if (this.shouldStop) { this.done(); return; }
+                if (k >= 1) {
+                    if (t < bars.length) {
+                        // Reset all bars
+                        for (let b = 0; b < bars.length; b++) {
+                            if (k === 1)
+                                bars[b].setFill(t < b ? 'default' : 'sorted');
+                            else
+                                bars[b].setFill((b - i) % k === 0 ? 'comparing' : 'default');
+                            bars[b].border('transparent');
+                        }
+
+                        // Highlight current element being inserted
+                        bars[t].border('#0891b2');
+                        bars[t].setFill('comparing');
+
+                        let j = t;
+                        while (j >= k && bars[j - k].value > bars[j].value) {
+                            // Highlight the two elements being compared
+                            bars[j].setFill('comparing');
+                            bars[j].border('#0891b2');
+                            bars[j - k].setFill('smaller');
+                            bars[j - k].border('#f97316');
+
+                            this.chart.swap(j - k, j);
+                            j -= k;
+                        }
+                        t += k;
+                    } else {
+                        i++;
+                        if (i >= 2 * k) {
+                            k = Math.floor(k / 2);
+                            i = k;
+                        }
+                        t = i;
+                    }
+                } else this.done();
+            }, this.delayMillis);
+        }
+
+        quickSort() {
+            this.stack = [];
+            this.quickSortCall(new LiveCall(0, this.chart.bars.length - 1));
+        }
+
+        quickSortCall(call) {
+            if (this.shouldStop) { this.done(); return; }
+            const bars = this.chart.bars;
+            let left = call.left, right = call.right;
+            let pivotValue = bars[right].value;
+            let i = left, j = right - 1, toggle = true;
+            this.timer.fire(() => {
+                if (this.shouldStop) { this.done(); return; }
+                if (i <= j) {
+                    while (i < right && bars[i].value < pivotValue) i++;
+                    while (j >= 0 && bars[j].value > pivotValue) j--;
+
+                    // Reset all bars in current partition
+                    for (let k = 0; k < bars.length; k++) {
+                        bars[k].border('transparent');
+                        if (bars[k].colorClass !== 'bar-sorted')
+                            bars[k].setFill('default');
+                    }
+
+                    // Highlight pivot (orange)
+                    bars[right].border('#f97316');
+                    bars[right].setFill('pivot');
+
+                    // Highlight partition boundaries with borders
+                    if (i <= j) {
+                        if (i !== right) {
+                            bars[i].setFill('comparing');
+                            bars[i].border('#0891b2');
+                        }
+                        if (j !== right && j >= 0) {
+                            bars[j].setFill('comparing');
+                            bars[j].border('#0891b2');
+                        }
+                        this.chart.swap(i++, j--);
+                    }
+                    this.timer.fireAgain();
+                } else if (toggle) {
+                    toggle = false;
+                    // Final swap of pivot into correct position
+                    if (i !== right) {
+                        bars[i].setFill('comparing');
+                        bars[i].border('#0891b2');
+                    }
+                    bars[right].setFill('sorted');
+                    bars[right].border('transparent');
+                    this.chart.swap(i, right);
+                    if (right <= left + 2)
+                        for (let k = left; k <= right; k++) {
+                            bars[k].setFill('sorted');
+                            bars[k].border('transparent');
+                        }
+                    this.timer.fireAgain();
+                } else {
+                    if (i + 1 < right)
+                        this.stack.push(new LiveCall(i + 1, right));
+                    if (left < j)
+                        this.quickSortCall(new LiveCall(left, j));
+                    else if (this.stack.length > 0) {
+                        for (let k = 0; k <= j; k++) {
+                            bars[k].setFill('sorted');
+                            bars[k].border('transparent');
+                        }
+                        this.quickSortCall(this.stack.pop());
+                    } else this.done();
+                }
+            }, this.delayMillis);
+        }
+
+        mergeSort() {
+            const bars = this.chart.bars;
+            this.stack = [];
+            let merge = new Array(bars.length);
+            this.mergeSortRecursiveCall(0, merge.length - 1);
+            this.timer.fire(() => {
+                if (this.shouldStop) { this.done(); return; }
+                if (this.stack.length > 0) {
+                    let leftCall = this.stack.shift();
+                    let rightCall = this.stack.shift();
+                    this.mergeLeftWithRight(leftCall.left, rightCall.left, rightCall.right, merge);
+                    for (let i = leftCall.left; i <= rightCall.right; i++)
+                        bars[i] = merge[i];
+                    this.chart.refresh();
+                    this.timer.fireAgain();
+                } else this.done();
+            }, this.delayMillis);
+        }
+
+        mergeSortRecursiveCall(left, right) {
+            if (right > left) {
+                let mid = Math.floor((right + left) / 2);
+                this.mergeSortRecursiveCall(left, mid);
+                this.mergeSortRecursiveCall(mid + 1, right);
+                this.stack.push(new LiveCall(left, mid));
+                this.stack.push(new LiveCall(mid + 1, right));
+            }
+        }
+
+        mergeLeftWithRight(left, right, end, merge) {
+            const bars = this.chart.bars;
+            if (right >= bars.length) right = bars.length - 1;
+            if (end >= bars.length) end = bars.length - 1;
+            let i = left, j = right;
+            for (let k = left; k <= end; k++) {
+                // Reset all bars
+                for (let l = 0; l < bars.length; l++) {
+                    if (bars[l] != null) {
+                        bars[l].setFill(l >= left && l <= end ? 'comparing' : 'default');
+                        bars[l].border('transparent');
+                    }
+                }
+
+                // Highlight merge range boundaries
+                if (left < bars.length) {
+                    bars[left].border('#0891b2');
+                }
+                if (end < bars.length) {
+                    bars[end].border('#0891b2');
+                }
+
+                // Highlight elements being compared
+                if (j > end || i < right && bars[i].value <= bars[j].value) {
+                    if (i < bars.length) {
+                        bars[i].setFill('smaller');
+                        bars[i].border('#f97316');
+                    }
+                    merge[k] = bars[i++];
+                } else if (i >= right || j <= end && bars[i].value > bars[j].value) {
+                    if (j < bars.length) {
+                        bars[j].setFill('smaller');
+                        bars[j].border('#f97316');
+                    }
+                    merge[k] = bars[j++];
+                }
+            }
+        }
+    }
+
+    $.ready(() => {
+        const app = new LiveSort();
+        window.algoLive = app;
+    });
+</script>
+</body>
+</html>
