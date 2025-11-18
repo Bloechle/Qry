@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TopHit WitMotion Validator - Qry</title>
+    <title>TopBox Multi-Session Analyzer - Qry</title>
     <link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/svg/qry-logo-white.svg">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,9 +13,7 @@
                 extend: {
                     colors: {
                         unifr: "#005395",
-                        tophit: "#ec4899",
-                        pimax: "#8b5cf6",
-                        witmotion: "#f59e0b",
+                        topbox: "#8b5cf6",
                         dark: { 100: "#0a0a0a", 200: "#1a1a1a", 300: "#2d2d30", 400: "#3e3e42", 500: "#52525b" }
                     }
                 }
@@ -26,13 +24,13 @@
     <style type="text/tailwindcss">
         @layer components {
             .btn { @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium; }
-            .btn-primary { @apply bg-tophit hover:bg-tophit/90 text-white focus:ring-2 focus:ring-tophit/50; }
+            .btn-primary { @apply bg-topbox hover:bg-topbox/90 text-white focus:ring-2 focus:ring-topbox/50; }
             .btn-secondary { @apply bg-unifr hover:bg-unifr/90 text-white focus:ring-2 focus:ring-unifr/50; }
             .card { @apply bg-dark-200 border border-dark-300 rounded-xl p-6 shadow-lg; }
             .stat-card { @apply bg-dark-300 border-l-4 rounded-lg p-4 text-center; }
             .drop-zone { @apply border-2 border-dashed border-dark-400 rounded-xl bg-dark-200/50 transition-all; }
-            .drop-zone.active { @apply border-tophit bg-tophit/5; }
-            .metric-card { @apply bg-dark-300 rounded-lg p-4 border-l-4; }
+            .drop-zone.active { @apply border-topbox bg-topbox/5; }
+            .session-badge { @apply inline-flex items-center px-2 py-1 rounded text-xs font-medium; }
         }
 
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
@@ -50,18 +48,18 @@
     <div class="max-w-7xl mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-gradient-to-br from-pimax to-witmotion rounded-lg flex items-center justify-center">
-                    <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+                <div class="w-10 h-10 bg-topbox rounded-lg flex items-center justify-center">
+                    <i data-lucide="layers" class="w-6 h-6 text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-semibold text-white">TopHit WitMotion Validator</h1>
-                    <p class="text-sm text-gray-400">Accelerometer Precision Analysis vs Pimax</p>
+                    <h1 class="text-xl font-semibold text-white">TopBox Multi-Session Analyzer</h1>
+                    <p class="text-sm text-gray-400">Batch Analysis & Comparison</p>
                 </div>
             </div>
             <div class="flex gap-3" id="header-actions" style="display: none;">
-                <button id="export-btn" class="btn btn-secondary">
+                <button id="export-all-btn" class="btn btn-secondary">
                     <i data-lucide="download" class="w-4 h-4"></i>
-                    Export CSV
+                    Export All
                 </button>
                 <button id="reset-btn" class="btn btn-primary">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
@@ -78,113 +76,96 @@
         <div id="drop-zone" class="drop-zone min-h-96 flex items-center justify-center cursor-pointer">
             <div class="text-center">
                 <div class="w-20 h-20 mx-auto mb-6 bg-dark-300 rounded-xl flex items-center justify-center">
-                    <i data-lucide="file-up" class="w-10 h-10 text-gray-400"></i>
+                    <i data-lucide="files" class="w-10 h-10 text-gray-400"></i>
                 </div>
-                <h2 class="text-2xl font-semibold mb-2">Drop TopHit Session JSON File</h2>
-                <p class="text-gray-400 mb-6">or click to browse</p>
+                <h2 class="text-2xl font-semibold mb-2">Drop Multiple TopBox JSON Files</h2>
+                <p class="text-gray-400 mb-6">or click to browse (supports 100+ files)</p>
                 <button id="browse-btn" class="btn btn-primary">
                     <i data-lucide="folder-open" class="w-4 h-4"></i>
                     Browse Files
                 </button>
-                <p class="text-xs text-gray-500 mt-4">Supports: TopHit session with WitMotion accelerometers</p>
+                <p class="text-xs text-gray-500 mt-4">Files like: 80_Martin_Briw_Dyn_2025-11-12_18h14.json</p>
             </div>
         </div>
     </div>
 
     <div id="results-container" style="display: none;">
 
-        <!-- Session Info -->
-        <div class="card mb-6">
-            <h2 class="text-xl font-bold mb-4">Session Information</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm" id="session-info"></div>
-        </div>
-
-        <!-- Stats -->
+        <!-- Overview Stats -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div class="stat-card border-tophit">
-                <div class="text-3xl font-bold mb-1 text-tophit" id="stat-total">0</div>
-                <div class="text-gray-400 text-sm">Total Trials</div>
-            </div>
-            <div class="stat-card border-green-500">
-                <div class="text-3xl font-bold mb-1 text-green-400" id="stat-success">0</div>
-                <div class="text-gray-400 text-sm">Successful</div>
+            <div class="stat-card border-topbox">
+                <div class="text-3xl font-bold mb-1 text-topbox" id="stat-sessions">0</div>
+                <div class="text-gray-400 text-sm">Sessions</div>
             </div>
             <div class="stat-card border-blue-500">
-                <div class="text-3xl font-bold mb-1 text-blue-400" id="stat-rt">0ms</div>
-                <div class="text-gray-400 text-sm">Avg RT</div>
+                <div class="text-3xl font-bold mb-1 text-blue-400" id="stat-participants">0</div>
+                <div class="text-gray-400 text-sm">Participants</div>
+            </div>
+            <div class="stat-card border-green-500">
+                <div class="text-3xl font-bold mb-1 text-green-400" id="stat-total-trials">0</div>
+                <div class="text-gray-400 text-sm">Total Trials</div>
             </div>
             <div class="stat-card border-purple-500">
-                <div class="text-3xl font-bold mb-1 text-purple-400" id="stat-move">0ms</div>
-                <div class="text-gray-400 text-sm">Avg Move</div>
+                <div class="text-3xl font-bold mb-1 text-purple-400" id="stat-avg-rt">0ms</div>
+                <div class="text-gray-400 text-sm">Avg RT (All)</div>
             </div>
             <div class="stat-card border-orange-500">
-                <div class="text-3xl font-bold mb-1 text-orange-400" id="stat-hands">0/0</div>
-                <div class="text-gray-400 text-sm">L/R Hits</div>
+                <div class="text-3xl font-bold mb-1 text-orange-400" id="stat-conditions">0</div>
+                <div class="text-gray-400 text-sm">Conditions</div>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="card mb-4">
-            <div class="flex gap-4 items-center flex-wrap">
-                <label class="text-gray-300">
-                    <span class="mr-2">Filter:</span>
-                    <select id="filter-success" class="bg-dark-400 rounded px-3 py-1.5 border border-dark-500">
-                        <option value="all">All Trials</option>
-                        <option value="success">Successful Only</option>
-                        <option value="failed">Failed Only</option>
-                    </select>
-                </label>
-                <label class="text-gray-300">
-                    <span class="mr-2">Target:</span>
-                    <select id="filter-target" class="bg-dark-400 rounded px-3 py-1.5 border border-dark-500">
-                        <option value="all">All Targets</option>
-                        <option value="0">Target 0 (UL)</option>
-                        <option value="1">Target 1 (UR)</option>
-                        <option value="2">Target 2 (LL)</option>
-                        <option value="3">Target 3 (LR)</option>
-                    </select>
-                </label>
-                <div class="ml-auto text-gray-400 text-sm">
-                    Click trial to compare Pimax vs WitMotion
-                </div>
-            </div>
-        </div>
-
-        <!-- Trials Table -->
         <div class="card mb-6">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="border-b border-dark-300">
-                    <tr class="text-left text-gray-400">
-                        <th class="p-3 cursor-pointer hover:text-white" data-sort="id">
-                            ID <i data-lucide="arrow-up-down" class="w-3 h-3 inline"></i>
-                        </th>
-                        <th class="p-3 cursor-pointer hover:text-white" data-sort="startTargetIndex">
-                            Start <i data-lucide="arrow-up-down" class="w-3 h-3 inline"></i>
-                        </th>
-                        <th class="p-3 cursor-pointer hover:text-white" data-sort="goalTargetIndex">
-                            Goal <i data-lucide="arrow-up-down" class="w-3 h-3 inline"></i>
-                        </th>
-                        <th class="p-3 cursor-pointer hover:text-white" data-sort="hitHand">
-                            Hit Hand <i data-lucide="arrow-up-down" class="w-3 h-3 inline"></i>
-                        </th>
-                        <th class="p-3 cursor-pointer hover:text-white" data-sort="moveTime">
-                            Move Time <i data-lucide="arrow-up-down" class="w-3 h-3 inline"></i>
-                        </th>
-                        <th class="p-3 cursor-pointer hover:text-white" data-sort="hitTime">
-                            RT <i data-lucide="arrow-up-down" class="w-3 h-3 inline"></i>
-                        </th>
-                        <th class="p-3">Success</th>
-                    </tr>
-                    </thead>
-                    <tbody id="trials-body"></tbody>
-                </table>
+            <h3 class="text-lg font-bold mb-4">Filters & Grouping</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <label class="text-gray-300">
+                    <span class="text-sm mb-1 block">Participant</span>
+                    <select id="filter-participant" class="w-full bg-dark-400 rounded px-3 py-2 border border-dark-500">
+                        <option value="all">All Participants</option>
+                    </select>
+                </label>
+                <label class="text-gray-300">
+                    <span class="text-sm mb-1 block">Condition</span>
+                    <select id="filter-condition" class="w-full bg-dark-400 rounded px-3 py-2 border border-dark-500">
+                        <option value="all">All Conditions</option>
+                    </select>
+                </label>
+                <label class="text-gray-300">
+                    <span class="text-sm mb-1 block">Target Size</span>
+                    <select id="filter-size" class="w-full bg-dark-400 rounded px-3 py-2 border border-dark-500">
+                        <option value="all">All Sizes</option>
+                    </select>
+                </label>
+                <label class="text-gray-300">
+                    <span class="text-sm mb-1 block">Valid Only</span>
+                    <select id="filter-valid" class="w-full bg-dark-400 rounded px-3 py-2 border border-dark-500">
+                        <option value="all">All Trials</option>
+                        <option value="valid">Valid Only</option>
+                        <option value="invalid">Invalid Only</option>
+                    </select>
+                </label>
             </div>
         </div>
 
-        <!-- Trial Detail -->
+        <!-- Sessions List -->
+        <div class="card mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">Sessions</h3>
+                <span class="text-sm text-gray-400" id="session-count">0 sessions loaded</span>
+            </div>
+            <div id="sessions-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Comparison Chart -->
+        <div class="card mb-6" id="comparison-section" style="display: none;">
+            <h3 class="text-lg font-bold mb-4">Performance Comparison</h3>
+            <div id="comparison-chart"></div>
+        </div>
+
+        <!-- Trial Detail (when session selected) -->
         <div id="trial-detail" class="hidden">
-            <div class="card mb-6">
+            <div class="card">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-xl font-bold">Trial Detail</h3>
@@ -195,41 +176,6 @@
                         Close
                     </button>
                 </div>
-
-                <!-- Validation Metrics -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="metric-card border-pimax">
-                        <div class="text-gray-400 text-xs mb-1">Max Left Position</div>
-                        <div class="text-2xl font-bold text-pimax" id="metric-max-left-pos">0mm</div>
-                    </div>
-                    <div class="metric-card border-witmotion">
-                        <div class="text-gray-400 text-xs mb-1">Max Left Acceleration</div>
-                        <div class="text-2xl font-bold text-witmotion" id="metric-max-left-acc">0mg</div>
-                    </div>
-                    <div class="metric-card border-pimax">
-                        <div class="text-gray-400 text-xs mb-1">Max Right Position</div>
-                        <div class="text-2xl font-bold text-pimax" id="metric-max-right-pos">0mm</div>
-                    </div>
-                    <div class="metric-card border-witmotion">
-                        <div class="text-gray-400 text-xs mb-1">Max Right Acceleration</div>
-                        <div class="text-2xl font-bold text-witmotion" id="metric-max-right-acc">0mg</div>
-                    </div>
-                </div>
-
-                <!-- Chart Toggles -->
-                <div class="flex gap-4 mb-4">
-                    <label class="flex items-center text-white cursor-pointer">
-                        <input type="checkbox" id="show-position" checked class="mr-2 w-4 h-4">
-                        <i data-lucide="crosshair" class="w-4 h-4 mr-1 text-pimax"></i>
-                        Position (Pimax Reference)
-                    </label>
-                    <label class="flex items-center text-white cursor-pointer">
-                        <input type="checkbox" id="show-acceleration" checked class="mr-2 w-4 h-4">
-                        <i data-lucide="zap" class="w-4 h-4 mr-1 text-witmotion"></i>
-                        Acceleration (WitMotion)
-                    </label>
-                </div>
-
                 <div id="chart"></div>
             </div>
         </div>
@@ -237,36 +183,26 @@
 
     <div id="loading" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div class="card text-center">
-            <div class="w-8 h-8 border-2 border-gray-600 border-t-tophit rounded-full mx-auto mb-4 animate-spin"></div>
-            <p class="text-gray-300">Loading session...</p>
+            <div class="w-8 h-8 border-2 border-gray-600 border-t-topbox rounded-full mx-auto mb-4 animate-spin"></div>
+            <p class="text-gray-300" id="loading-text">Processing files...</p>
         </div>
     </div>
 
 </main>
 
-<input type="file" id="file-input" accept=".json" class="hidden">
+<input type="file" id="file-input" accept=".json" multiple class="hidden">
 
 <script type="module">
     import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js';
     import { QryApp } from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/QryApp.js';
 
-    class TopHitWitMotionValidator extends QryApp {
-        #data = null;
+    class TopBoxMultiAnalyzer extends QryApp {
+        #sessions = [];
         #selectedTrial = null;
-        #sortField = 'id';
-        #sortAsc = true;
-        #filterSuccess = 'all';
-        #filterTarget = 'all';
-
-        #targetNames = {
-            0: 'Upper Left',
-            1: 'Upper Right',
-            2: 'Lower Left',
-            3: 'Lower Right'
-        };
+        #filters = { participant: 'all', condition: 'all', size: 'all', valid: 'all' };
 
         constructor() {
-            super({ title: 'TopHit WitMotion Validator', logLevel: 'info' });
+            super({ title: 'TopBox Multi-Analyzer', logLevel: 'info' });
             this.#init();
         }
 
@@ -275,18 +211,20 @@
             this.bindAll({
                 '#browse-btn': () => $('#file-input').el.click(),
                 '#reset-btn': () => this.#reset(),
-                '#export-btn': () => this.#exportCSV(),
-                '#file-input': { event: 'change', handler: (e) => this.#handleFile(e) },
-                '#filter-success': { event: 'change', handler: () => this.#renderTrials() },
-                '#filter-target': { event: 'change', handler: () => this.#renderTrials() },
-                '#close-detail': () => this.#hideDetail(),
-                '#show-position': { event: 'change', handler: () => this.#renderChart() },
-                '#show-acceleration': { event: 'change', handler: () => this.#renderChart() }
+                '#export-all-btn': () => this.#exportAll(),
+                '#file-input': { event: 'change', handler: (e) => this.#handleFiles(e) },
+                '#filter-participant': { event: 'change', handler: () => this.#applyFilters() },
+                '#filter-condition': { event: 'change', handler: () => this.#applyFilters() },
+                '#filter-size': { event: 'change', handler: () => this.#applyFilters() },
+                '#filter-valid': { event: 'change', handler: () => this.#applyFilters() },
+                '#close-detail': () => this.#hideDetail()
             });
         }
 
         #setupDragDrop() {
             const dropZone = $('#drop-zone').el;
+
+            dropZone.addEventListener('click', () => $('#file-input').el.click());
 
             ['dragenter', 'dragover'].forEach(evt => {
                 dropZone.addEventListener(evt, (e) => {
@@ -305,48 +243,91 @@
             });
 
             dropZone.addEventListener('drop', (e) => {
-                const file = e.dataTransfer.files[0];
-                if (file) this.#loadFile(file);
+                const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
+                if (files.length > 0) this.#processFiles(files);
             });
         }
 
-        #handleFile(e) {
-            const file = e.target.files[0];
-            if (file) this.#loadFile(file);
+        #handleFiles(e) {
+            const files = Array.from(e.target.files).filter(f => f.name.endsWith('.json'));
+            if (files.length > 0) this.#processFiles(files);
         }
 
-        async #loadFile(file) {
-            if (!file.name.endsWith('.json')) {
-                this.error('Please upload a JSON file');
-                return;
-            }
-
+        async #processFiles(files) {
             $('#loading').cls('-hidden');
+            $('#loading-text').text(`Processing ${files.length} files...`);
 
             try {
-                const text = await file.text();
-                this.#data = JSON.parse(text);
-
-                const allTrials = [];
-                if (this.#data.trial && this.#data.trial.id !== undefined) {
-                    allTrials.push(this.#data.trial);
-                }
-                if (this.#data.trials && Array.isArray(this.#data.trials)) {
-                    allTrials.push(...this.#data.trials);
+                for (let i = 0; i < files.length; i++) {
+                    $('#loading-text').text(`Processing file ${i + 1}/${files.length}...`);
+                    await this.#loadFile(files[i]);
                 }
 
-                if (allTrials.length === 0) {
-                    throw new Error('No trials found in session');
-                }
-
-                this.#data.allTrials = allTrials;
-                this.success(`Loaded ${allTrials.length} trials`);
+                this.success(`Loaded ${files.length} sessions`);
                 this.#showResults();
             } catch (err) {
-                this.error('Invalid JSON file: ' + err.message);
+                this.error('Failed to process files: ' + err.message);
             } finally {
                 $('#loading').cls('+hidden');
             }
+        }
+
+        async #loadFile(file) {
+            const text = await file.text();
+            const data = JSON.parse(text);
+
+            // Parse filename: 80_Martin_Briw_Dyn_2025-11-12_18h14.json
+            const meta = this.#parseFilename(file.name);
+
+            const session = {
+                filename: file.name,
+                meta,
+                config: data.config,
+                trials: data.trials || (data.trial ? [data.trial] : []),
+                stats: null
+            };
+
+            session.stats = this.#calculateSessionStats(session.trials);
+            this.#sessions.push(session);
+        }
+
+        #parseFilename(filename) {
+            // Pattern: [size]_[participant]_[condition]_[date]_[time].json
+            const parts = filename.replace('.json', '').split('_');
+
+            if (parts.length >= 5) {
+                return {
+                    size: parts[0],
+                    participant: parts[1] + (parts[2] && !parts[2].match(/^\d/) ? '_' + parts[2] : ''),
+                    condition: parts.length === 6 ? parts[3] : parts[2],
+                    date: parts.length === 6 ? parts[4] : parts[3],
+                    time: parts.length === 6 ? parts[5] : parts[4]
+                };
+            }
+
+            // Fallback
+            return {
+                size: 'unknown',
+                participant: filename.split('_')[1] || 'unknown',
+                condition: 'unknown',
+                date: 'unknown',
+                time: 'unknown'
+            };
+        }
+
+        #calculateSessionStats(trials) {
+            const validTrials = trials.filter(t => t.isValid);
+            const rts = validTrials.filter(t => t.hitTime > 0).map(t => t.hitTime);
+            const moves = validTrials.filter(t => t.moveTime > 0).map(t => t.moveTime);
+
+            return {
+                total: trials.length,
+                valid: validTrials.length,
+                avgRT: rts.length ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : 0,
+                avgMove: moves.length ? Math.round(moves.reduce((a, b) => a + b, 0) / moves.length) : 0,
+                leftHits: trials.filter(t => t.hitHand === 'Left').length,
+                rightHits: trials.filter(t => t.hitHand === 'Right').length
+            };
         }
 
         #showResults() {
@@ -354,135 +335,247 @@
             $('#results-container').show();
             $('#header-actions').show();
 
-            this.#renderSessionInfo();
-            this.#renderStats();
-            this.#renderTrials();
-            this.#setupTableEvents();
+            this.#updateOverviewStats();
+            this.#populateFilters();
+            this.#renderSessions();
+            this.#renderComparison();
 
             this.refreshIcons();
         }
 
-        #renderSessionInfo() {
-            const config = this.#data.config || {};
-            const html = `
-                <div>
-                    <div class="text-gray-400">Player</div>
-                    <div class="text-white font-medium">${config.playerName || 'Unknown'}</div>
-                </div>
-                <div>
-                    <div class="text-gray-400">Target Size</div>
-                    <div class="text-white font-medium">${config.targetSize || 0}mm</div>
-                </div>
-                <div>
-                    <div class="text-gray-400">Grid Dimension</div>
-                    <div class="text-white font-medium">${config.gridDimension || 0}mm</div>
-                </div>
-                <div>
-                    <div class="text-gray-400">Move Speed</div>
-                    <div class="text-white font-medium">${config.moveSpeed || 0}mm/s</div>
-                </div>
-            `;
-            $('#session-info').html(html);
+        #updateOverviewStats() {
+            const participants = new Set(this.#sessions.map(s => s.meta.participant));
+            const conditions = new Set(this.#sessions.map(s => s.meta.condition));
+            const totalTrials = this.#sessions.reduce((sum, s) => sum + s.stats.total, 0);
+            const allRTs = this.#sessions.flatMap(s =>
+                s.trials.filter(t => t.isValid && t.hitTime > 0).map(t => t.hitTime)
+            );
+            const avgRT = allRTs.length ? Math.round(allRTs.reduce((a, b) => a + b, 0) / allRTs.length) : 0;
+
+            $('#stat-sessions').text(this.#sessions.length);
+            $('#stat-participants').text(participants.size);
+            $('#stat-total-trials').text(totalTrials);
+            $('#stat-avg-rt').text(avgRT + 'ms');
+            $('#stat-conditions').text(conditions.size);
         }
 
-        #renderStats() {
-            const stats = this.#calculateStats();
-            $('#stat-total').text(stats.total);
-            $('#stat-success').text(stats.successCount);
-            $('#stat-rt').text(stats.avgRT + 'ms');
-            $('#stat-move').text(stats.avgMove + 'ms');
-            $('#stat-hands').text(`${stats.leftHits}/${stats.rightHits}`);
-        }
+        #populateFilters() {
+            const participants = [...new Set(this.#sessions.map(s => s.meta.participant))].sort();
+            const conditions = [...new Set(this.#sessions.map(s => s.meta.condition))].sort();
+            const sizes = [...new Set(this.#sessions.map(s => s.meta.size))].sort();
 
-        #renderTrials() {
-            this.#filterSuccess = $('#filter-success').el.value;
-            this.#filterTarget = $('#filter-target').el.value;
-            let trials = [...this.#data.allTrials];
-
-            if (this.#filterSuccess === 'success') {
-                trials = trials.filter(t => t.isSuccess);
-            } else if (this.#filterSuccess === 'failed') {
-                trials = trials.filter(t => !t.isSuccess);
-            }
-
-            if (this.#filterTarget !== 'all') {
-                const targetIdx = parseInt(this.#filterTarget);
-                trials = trials.filter(t => t.goalTargetIndex === targetIdx);
-            }
-
-            trials.sort((a, b) => {
-                let valA = a[this.#sortField];
-                let valB = b[this.#sortField];
-                if (typeof valA === 'string') {
-                    valA = valA.toLowerCase();
-                    valB = valB.toLowerCase();
-                }
-                return this.#sortAsc ?
-                    (valA < valB ? -1 : 1) :
-                    (valA > valB ? -1 : 1);
-            });
-
-            const html = trials.map(t => `
-                <tr class="border-b border-dark-300 hover:bg-dark-300/30 cursor-pointer transition-colors" data-trial-id="${t.id}">
-                    <td class="p-3 font-mono text-gray-300">#${t.id}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
-                            ${t.startTargetIndex}
-                        </span>
-                    </td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
-                            ${t.goalTargetIndex}
-                        </span>
-                    </td>
-                    <td class="p-3 text-gray-300">${t.hitHand || '-'}</td>
-                    <td class="p-3 font-mono text-gray-300">${t.moveTime ? t.moveTime + 'ms' : '-'}</td>
-                    <td class="p-3 font-mono text-gray-300">${t.hitTime ? t.hitTime + 'ms' : '-'}</td>
-                    <td class="p-3">
-                        ${t.isSuccess ?
-                '<span class="text-green-400 text-lg">✓</span>' :
-                '<span class="text-red-400 text-lg">✗</span>'}
-                    </td>
-                </tr>
-            `).join('');
-
-            $('#trials-body').html(html);
-
-            $('tr[data-trial-id]').on('click', (e) => {
-                const id = parseInt($(e.currentTarget).attr('data-trial-id'));
-                this.#showTrialDetail(id);
-            });
-        }
-
-        #setupTableEvents() {
-            $('th[data-sort]').on('click', (e) => {
-                const field = $(e.currentTarget).attr('data-sort');
-                if (this.#sortField === field) {
-                    this.#sortAsc = !this.#sortAsc;
-                } else {
-                    this.#sortField = field;
-                    this.#sortAsc = true;
-                }
-                this.#renderTrials();
-            });
-        }
-
-        #showTrialDetail(trialId) {
-            const trial = this.#data.allTrials.find(t => t.id === trialId);
-            if (!trial) return;
-
-            this.#selectedTrial = trial;
-            $('#trial-detail').cls('-hidden');
-
-            const startName = this.#targetNames[trial.startTargetIndex] || 'Unknown';
-            const goalName = this.#targetNames[trial.goalTargetIndex] || 'Unknown';
-
-            $('#trial-info').text(
-                `Trial #${trial.id} • ${startName} → ${goalName} • Hit: ${trial.hitHand || 'None'} • RT: ${trial.hitTime}ms`
+            $('#filter-participant').html(
+                '<option value="all">All Participants</option>' +
+                participants.map(p => `<option value="${p}">${p}</option>`).join('')
             );
 
-            // Update metrics
-            this.#updateMetrics(trial);
+            $('#filter-condition').html(
+                '<option value="all">All Conditions</option>' +
+                conditions.map(c => `<option value="${c}">${c}</option>`).join('')
+            );
+
+            $('#filter-size').html(
+                '<option value="all">All Sizes</option>' +
+                sizes.map(s => `<option value="${s}">${s}mm</option>`).join('')
+            );
+        }
+
+        #applyFilters() {
+            this.#filters = {
+                participant: $('#filter-participant').val(),
+                condition: $('#filter-condition').val(),
+                size: $('#filter-size').val(),
+                valid: $('#filter-valid').val()
+            };
+
+            this.#renderSessions();
+            this.#renderComparison();
+        }
+
+        #getFilteredSessions() {
+            return this.#sessions.filter(s => {
+                if (this.#filters.participant !== 'all' && s.meta.participant !== this.#filters.participant) return false;
+                if (this.#filters.condition !== 'all' && s.meta.condition !== this.#filters.condition) return false;
+                if (this.#filters.size !== 'all' && s.meta.size !== this.#filters.size) return false;
+                return true;
+            });
+        }
+
+        #renderSessions() {
+            const filtered = this.#getFilteredSessions();
+            $('#session-count').text(`${filtered.length} of ${this.#sessions.length} sessions`);
+
+            const html = filtered.map((session, idx) => {
+                const validPercent = Math.round((session.stats.valid / session.stats.total) * 100);
+
+                return `
+                    <div class="bg-dark-300 rounded-lg p-4 hover:bg-dark-400 transition-colors cursor-pointer" data-session-idx="${this.#sessions.indexOf(session)}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-semibold text-white">${session.meta.participant}</span>
+                                    <span class="session-badge bg-blue-500/20 text-blue-400">${session.meta.condition}</span>
+                                    <span class="session-badge bg-purple-500/20 text-purple-400">${session.meta.size}mm</span>
+                                    <span class="text-xs text-gray-500">${session.meta.date} ${session.meta.time}</span>
+                                </div>
+                                <div class="grid grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-400">Trials:</span>
+                                        <span class="text-white ml-1">${session.stats.total} (${validPercent}% valid)</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400">Avg RT:</span>
+                                        <span class="text-white ml-1">${session.stats.avgRT}ms</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400">Avg Move:</span>
+                                        <span class="text-white ml-1">${session.stats.avgMove}ms</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400">L/R:</span>
+                                        <span class="text-white ml-1">${session.stats.leftHits}/${session.stats.rightHits}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm ml-4" data-export-session="${this.#sessions.indexOf(session)}">
+                                <i data-lucide="download" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            $('#sessions-list').html(html);
+
+            // Bind events
+            $('[data-session-idx]').on('click', (e) => {
+                if ($(e.target).closest('[data-export-session]').exists) return;
+                const idx = parseInt($(e.currentTarget).attr('data-session-idx'));
+                this.#showSessionDetail(idx);
+            });
+
+            $('[data-export-session]').on('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt($(e.currentTarget).attr('data-export-session'));
+                this.#exportSession(idx);
+            });
+
+            this.refreshIcons();
+        }
+
+        #renderComparison() {
+            const filtered = this.#getFilteredSessions();
+            if (filtered.length < 2) {
+                $('#comparison-section').hide();
+                return;
+            }
+
+            $('#comparison-section').show();
+            $('#comparison-chart').html('');
+
+            const margin = { top: 20, right: 80, bottom: 100, left: 60 };
+            const width = $('#comparison-chart').el.clientWidth - margin.left - margin.right;
+            const height = 400;
+
+            const svg = d3.select('#comparison-chart')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const data = filtered.map(s => ({
+                label: `${s.meta.participant}_${s.meta.condition}_${s.meta.size}`,
+                rt: s.stats.avgRT,
+                move: s.stats.avgMove,
+                valid: (s.stats.valid / s.stats.total) * 100
+            }));
+
+            const xScale = d3.scaleBand()
+                .domain(data.map(d => d.label))
+                .range([0, width])
+                .padding(0.2);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, Math.max(...data.map(d => Math.max(d.rt, d.move)))])
+                .range([height, 0]);
+
+            // Grid
+            svg.append('g')
+                .attr('class', 'grid')
+                .attr('opacity', 0.1)
+                .call(d3.axisLeft(yScale).tickSize(-width).tickFormat(''));
+
+            // Axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(xScale))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end')
+                .style('fill', '#9CA3AF');
+
+            svg.append('g')
+                .call(d3.axisLeft(yScale))
+                .style('color', '#9CA3AF');
+
+            // RT bars
+            svg.selectAll('.bar-rt')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar-rt')
+                .attr('x', d => xScale(d.label))
+                .attr('y', d => yScale(d.rt))
+                .attr('width', xScale.bandwidth() / 2)
+                .attr('height', d => height - yScale(d.rt))
+                .attr('fill', '#3B82F6');
+
+            // Move bars
+            svg.selectAll('.bar-move')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar-move')
+                .attr('x', d => xScale(d.label) + xScale.bandwidth() / 2)
+                .attr('y', d => yScale(d.move))
+                .attr('width', xScale.bandwidth() / 2)
+                .attr('height', d => height - yScale(d.move))
+                .attr('fill', '#10B981');
+
+            // Legend
+            const legend = svg.append('g')
+                .attr('transform', `translate(${width - 100}, 0)`);
+
+            legend.append('rect')
+                .attr('x', 0).attr('y', 0)
+                .attr('width', 15).attr('height', 15)
+                .attr('fill', '#3B82F6');
+            legend.append('text')
+                .attr('x', 20).attr('y', 12)
+                .style('fill', '#9CA3AF')
+                .style('font-size', '12px')
+                .text('RT');
+
+            legend.append('rect')
+                .attr('x', 0).attr('y', 20)
+                .attr('width', 15).attr('height', 15)
+                .attr('fill', '#10B981');
+            legend.append('text')
+                .attr('x', 20).attr('y', 32)
+                .style('fill', '#9CA3AF')
+                .style('font-size', '12px')
+                .text('Move');
+        }
+
+        #showSessionDetail(sessionIdx) {
+            const session = this.#sessions[sessionIdx];
+            this.#selectedTrial = session.trials[0]; // Show first trial
+
+            $('#trial-detail').cls('-hidden');
+            $('#trial-info').text(
+                `Session: ${session.meta.participant} - ${session.meta.condition} - ${session.meta.size}mm`
+            );
 
             setTimeout(() => {
                 $('#trial-detail').el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -490,20 +583,6 @@
 
             this.#renderChart();
             this.refreshIcons();
-        }
-
-        #updateMetrics(trial) {
-            const validIdx = trial.samplingIndex || Math.max(trial.posLeft?.length || 0, trial.posRight?.length || 0);
-
-            const leftPos = trial.posLeft?.slice(0, validIdx).filter(v => v !== 0) || [];
-            const rightPos = trial.posRight?.slice(0, validIdx).filter(v => v !== 0) || [];
-            const leftAcc = trial.accLeft?.slice(0, validIdx).filter(v => v !== 0) || [];
-            const rightAcc = trial.accRight?.slice(0, validIdx).filter(v => v !== 0) || [];
-
-            $('#metric-max-left-pos').text((leftPos.length ? Math.max(...leftPos) : 0) + 'mm');
-            $('#metric-max-right-pos').text((rightPos.length ? Math.max(...rightPos) : 0) + 'mm');
-            $('#metric-max-left-acc').text((leftAcc.length ? Math.max(...leftAcc) : 0) + 'mg');
-            $('#metric-max-right-acc').text((rightAcc.length ? Math.max(...rightAcc) : 0) + 'mg');
         }
 
         #hideDetail() {
@@ -514,9 +593,6 @@
         #renderChart() {
             const trial = this.#selectedTrial;
             if (!trial) return;
-
-            const showPosition = $('#show-position').el.checked;
-            const showAcceleration = $('#show-acceleration').el.checked;
 
             $('#chart').html('');
 
@@ -531,259 +607,104 @@
                 .append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
 
-            const validSamples = trial.samplingIndex || Math.max(
-                trial.posLeft?.length || 0,
-                trial.posRight?.length || 0
-            );
+            const validIdx = trial.samplingIndex || 100;
 
             const xScale = d3.scaleLinear()
-                .domain([0, validSamples - 1])
+                .domain([0, validIdx - 1])
                 .range([0, width]);
 
-            // Dual Y-axis scales
-            const yScalePos = d3.scaleLinear()
-                .domain([-200, 600])
+            const yScale = d3.scaleLinear()
+                .domain([0, 10000])
                 .range([height, 0]);
 
-            const yScaleAcc = d3.scaleLinear()
-                .domain([0, 12000])
-                .range([height, 0]);
-
-            // Grid
+            // Grid & Axes
             svg.append('g')
                 .attr('class', 'grid')
                 .attr('opacity', 0.1)
-                .call(d3.axisLeft(yScalePos).tickSize(-width).tickFormat(''));
+                .call(d3.axisLeft(yScale).tickSize(-width).tickFormat(''));
 
-            // X Axis
             svg.append('g')
                 .attr('transform', `translate(0,${height})`)
                 .call(d3.axisBottom(xScale))
                 .style('color', '#9CA3AF');
 
-            svg.append('text')
-                .attr('x', width / 2)
-                .attr('y', height + 40)
-                .attr('text-anchor', 'middle')
-                .style('fill', '#9CA3AF')
-                .text('Sample Index (10ms intervals)');
-
-            // Left Y-axis (Position)
-            if (showPosition) {
-                svg.append('g')
-                    .call(d3.axisLeft(yScalePos))
-                    .style('color', '#8b5cf6');
-
-                svg.append('text')
-                    .attr('transform', 'rotate(-90)')
-                    .attr('y', -60)
-                    .attr('x', -height / 2)
-                    .attr('text-anchor', 'middle')
-                    .style('fill', '#8b5cf6')
-                    .text('Position (mm) - Pimax Reference');
-            }
-
-            // Right Y-axis (Acceleration)
-            if (showAcceleration) {
-                svg.append('g')
-                    .attr('transform', `translate(${width},0)`)
-                    .call(d3.axisRight(yScaleAcc))
-                    .style('color', '#f59e0b');
-
-                svg.append('text')
-                    .attr('transform', 'rotate(90)')
-                    .attr('y', -width - 60)
-                    .attr('x', height / 2)
-                    .attr('text-anchor', 'middle')
-                    .style('fill', '#f59e0b')
-                    .text('Acceleration (mg) - WitMotion');
-            }
+            svg.append('g')
+                .call(d3.axisLeft(yScale))
+                .style('color', '#9CA3AF');
 
             const line = d3.line()
                 .x((d, i) => xScale(i))
+                .y(d => yScale(d))
                 .curve(d3.curveMonotoneX);
 
-            // Position lines (Pimax reference)
-            if (showPosition) {
-                const leftPos = trial.posLeft?.slice(0, validSamples) || [];
-                const rightPos = trial.posRight?.slice(0, validSamples) || [];
-
-                if (leftPos.length > 0) {
-                    svg.append('path')
-                        .datum(leftPos)
-                        .attr('fill', 'none')
-                        .attr('stroke', '#8b5cf6')
-                        .attr('stroke-width', 3)
-                        .attr('d', line.y(d => yScalePos(d)));
-                }
-
-                if (rightPos.length > 0) {
-                    svg.append('path')
-                        .datum(rightPos)
-                        .attr('fill', 'none')
-                        .attr('stroke', '#a78bfa')
-                        .attr('stroke-width', 3)
-                        .attr('d', line.y(d => yScalePos(d)));
-                }
-            }
-
-            // Acceleration lines (WitMotion)
-            if (showAcceleration) {
-                const leftAcc = trial.accLeft?.slice(0, validSamples) || [];
-                const rightAcc = trial.accRight?.slice(0, validSamples) || [];
-
-                if (leftAcc.length > 0) {
-                    svg.append('path')
-                        .datum(leftAcc)
-                        .attr('fill', 'none')
-                        .attr('stroke', '#f59e0b')
-                        .attr('stroke-width', 2)
-                        .attr('stroke-dasharray', '5,5')
-                        .attr('d', line.y(d => yScaleAcc(d)));
-                }
-
-                if (rightAcc.length > 0) {
-                    svg.append('path')
-                        .datum(rightAcc)
-                        .attr('fill', 'none')
-                        .attr('stroke', '#fbbf24')
-                        .attr('stroke-width', 2)
-                        .attr('stroke-dasharray', '5,5')
-                        .attr('d', line.y(d => yScaleAcc(d)));
-                }
-            }
-
-            // Legend
-            const legend = svg.append('g')
-                .attr('transform', `translate(10, 10)`);
-
-            let yOffset = 0;
-            const legendItems = [];
-
-            if (showPosition) {
-                legendItems.push(
-                    { color: '#8b5cf6', label: 'Left Pos (Pimax)', dash: false },
-                    { color: '#a78bfa', label: 'Right Pos (Pimax)', dash: false }
-                );
-            }
-
-            if (showAcceleration) {
-                legendItems.push(
-                    { color: '#f59e0b', label: 'Left Acc (WitMotion)', dash: true },
-                    { color: '#fbbf24', label: 'Right Acc (WitMotion)', dash: true }
-                );
-            }
-
-            legendItems.forEach((item) => {
-                const line = legend.append('line')
-                    .attr('x1', 0).attr('x2', 30)
-                    .attr('y1', yOffset).attr('y2', yOffset)
-                    .attr('stroke', item.color)
-                    .attr('stroke-width', item.dash ? 2 : 3);
-
-                if (item.dash) line.attr('stroke-dasharray', '5,5');
-
-                legend.append('text')
-                    .attr('x', 35).attr('y', yOffset + 4)
-                    .style('fill', '#9CA3AF')
-                    .style('font-size', '12px')
-                    .text(item.label);
-
-                yOffset += 20;
-            });
-
-            // Movement time markers
-            if (trial.leftMoveTime > 0) {
-                const leftIdx = Math.floor(trial.leftMoveTime / 10);
-                svg.append('line')
-                    .attr('x1', xScale(leftIdx))
-                    .attr('x2', xScale(leftIdx))
-                    .attr('y1', 0)
-                    .attr('y2', height)
+            // Acceleration lines
+            if (trial.accLeft) {
+                svg.append('path')
+                    .datum(trial.accLeft.slice(0, validIdx))
+                    .attr('fill', 'none')
                     .attr('stroke', '#3B82F6')
-                    .attr('stroke-width', 1)
-                    .attr('stroke-dasharray', '3,3')
-                    .attr('opacity', 0.5);
+                    .attr('stroke-width', 2)
+                    .attr('d', line);
             }
 
-            if (trial.rightMoveTime > 0) {
-                const rightIdx = Math.floor(trial.rightMoveTime / 10);
-                svg.append('line')
-                    .attr('x1', xScale(rightIdx))
-                    .attr('x2', xScale(rightIdx))
-                    .attr('y1', 0)
-                    .attr('y2', height)
+            if (trial.accRight) {
+                svg.append('path')
+                    .datum(trial.accRight.slice(0, validIdx))
+                    .attr('fill', 'none')
                     .attr('stroke', '#10B981')
-                    .attr('stroke-width', 1)
-                    .attr('stroke-dasharray', '3,3')
-                    .attr('opacity', 0.5);
+                    .attr('stroke-width', 2)
+                    .attr('d', line);
             }
         }
 
-        #calculateStats() {
-            const trials = this.#data.allTrials;
-            const successTrials = trials.filter(t => t.isSuccess);
-
-            const rts = successTrials.filter(t => t.hitTime > 0).map(t => t.hitTime);
-            const moves = successTrials.filter(t => t.moveTime > 0).map(t => t.moveTime);
-
-            return {
-                total: trials.length,
-                successCount: successTrials.length,
-                successRate: Math.round(successTrials.length / trials.length * 100),
-                avgRT: rts.length ? Math.round(rts.reduce((a,b) => a+b, 0) / rts.length) : 0,
-                avgMove: moves.length ? Math.round(moves.reduce((a,b) => a+b, 0) / moves.length) : 0,
-                leftHits: trials.filter(t => t.hitHand === 'LeftHand').length,
-                rightHits: trials.filter(t => t.hitHand === 'RightHand').length
-            };
-        }
-
-        #exportCSV() {
-            const trials = this.#data.allTrials;
-            const headers = ['ID', 'Start', 'Goal', 'Hit', 'Hit Hand', 'Move Time',
-                'L Move', 'R Move', 'RT', 'Success', 'Max L Pos', 'Max R Pos',
-                'Max L Acc', 'Max R Acc'];
-
-            const rows = trials.map(t => {
-                const validIdx = t.samplingIndex || 100;
-                const leftPos = t.posLeft?.slice(0, validIdx).filter(v => v !== 0) || [];
-                const rightPos = t.posRight?.slice(0, validIdx).filter(v => v !== 0) || [];
-                const leftAcc = t.accLeft?.slice(0, validIdx).filter(v => v !== 0) || [];
-                const rightAcc = t.accRight?.slice(0, validIdx).filter(v => v !== 0) || [];
-
-                return [
-                    t.id,
-                    t.startTargetIndex,
-                    t.goalTargetIndex,
-                    t.hitTargetIndex,
-                    t.hitHand || '',
-                    t.moveTime || '',
-                    t.leftMoveTime || '',
-                    t.rightMoveTime || '',
-                    t.hitTime || '',
-                    t.isSuccess ? 'Success' : 'Failed',
-                    leftPos.length ? Math.max(...leftPos) : 0,
-                    rightPos.length ? Math.max(...rightPos) : 0,
-                    leftAcc.length ? Math.max(...leftAcc) : 0,
-                    rightAcc.length ? Math.max(...rightAcc) : 0
-                ];
-            });
-
-            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+        #exportSession(sessionIdx) {
+            const session = this.#sessions[sessionIdx];
+            const csv = this.#sessionToCSV(session);
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            const playerName = this.#data.config?.playerName || 'unknown';
-            a.download = `tophit_witmotion_${playerName}_${Date.now()}.csv`;
+            a.download = session.filename.replace('.json', '.csv');
             a.click();
             URL.revokeObjectURL(url);
+            this.success('Session exported');
+        }
 
-            this.success('CSV exported with validation metrics');
+        #exportAll() {
+            const filtered = this.#getFilteredSessions();
+            const csv = filtered.map(s => this.#sessionToCSV(s, false)).join('\n\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `topbox_all_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            this.success(`Exported ${filtered.length} sessions`);
+        }
+
+        #sessionToCSV(session, includeHeader = true) {
+            const headers = ['Participant', 'Condition', 'Size', 'Date', 'Time', 'Trial', 'Valid', 'RT', 'Move', 'Hand'];
+            const rows = session.trials.map(t => [
+                session.meta.participant,
+                session.meta.condition,
+                session.meta.size,
+                session.meta.date,
+                session.meta.time,
+                t.id,
+                t.isValid ? 'Yes' : 'No',
+                t.hitTime || '',
+                t.moveTime || '',
+                t.hitHand || ''
+            ]);
+
+            return includeHeader
+                ? [headers, ...rows].map(r => r.join(',')).join('\n')
+                : rows.map(r => r.join(',')).join('\n');
         }
 
         #reset() {
-            this.#data = null;
+            this.#sessions = [];
             this.#selectedTrial = null;
             $('#drop-zone-container').show();
             $('#results-container').hide();
@@ -793,7 +714,7 @@
         }
     }
 
-    new TopHitWitMotionValidator();
+    new TopBoxMultiAnalyzer();
 </script>
 </body>
 </html>

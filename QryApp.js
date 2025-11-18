@@ -57,7 +57,6 @@ export class QryApp {
         this.#initToast();
         this.#initLogger();
         this.#initHelpers();
-        this.#initIframeHeightSync();
 
         this.#initialized = true;
         this.success(`${this.config.title} ready`);
@@ -461,60 +460,5 @@ export class QryApp {
             time: (label) => console.time(`[${this.config.title}] ${label}`),
             timeEnd: (label) => console.timeEnd(`[${this.config.title}] ${label}`)
         };
-    }
-
-    #initIframeHeightSync() {
-        // Create height sentinel element at the end of body
-        if (!$('#qry-height-sentinel').exists) {
-            $('body').append($.create('div', {
-                id: 'qry-height-sentinel',
-                style: 'height: 1px; visibility: hidden;'
-            }));
-        }
-
-        // Function to calculate and send height to parent
-        const sendHeight = () => {
-            const sentinel = $('#qry-height-sentinel').el;
-            if (!sentinel) return;
-
-            const rect = sentinel.getBoundingClientRect();
-            const height = rect.bottom + window.pageYOffset;
-
-            // Send to parent window (safe in both iframe and standalone)
-            window.parent.postMessage({
-                type: 'qry-resize',
-                height: height
-            }, '*');
-        };
-
-        // Send height on page load
-        window.addEventListener('load', () => {
-            sendHeight();
-            setTimeout(sendHeight, 1000); // Second pass after animations/async content
-        });
-
-        // Send height on window resize (debounced)
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(sendHeight, 250);
-        });
-
-        // Send height on DOM changes (debounced)
-        if (window.MutationObserver) {
-            let mutationTimer;
-            const observer = new MutationObserver(() => {
-                clearTimeout(mutationTimer);
-                mutationTimer = setTimeout(sendHeight, 500);
-            });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: true
-            });
-        }
-
-        this.logger.debug('Iframe height sync initialized');
     }
 }
