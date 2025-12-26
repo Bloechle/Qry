@@ -2,7 +2,7 @@
  * Qry.js - Ultra-lightweight DOM manipulation library
  * Optimized for minimal verbosity and maximum performance
  *
- * @version 1.4.0
+ * @version 2.0.0
  * @author Jean-Luc Bloechle with Claude.ai
  * @license MIT
  */
