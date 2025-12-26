@@ -2,7 +2,7 @@
  * Qry.js - Ultra-lightweight DOM manipulation library
  * Optimized for minimal verbosity and maximum performance
  *
- * @version 1.2.0
+ * @version 1.4.0
  * @author Jean-Luc Bloechle with Claude.ai
  * @license MIT
  */
@@ -15,7 +15,7 @@ class Qry {
 
     /**
      * Create a new Qry instance
-     * @param {string|HTMLElement|SVGElement|Qry} [selector=document.documentElement] - CSS selector, element, or Qry instance
+     * @param {string|HTMLElement|SVGElement|NodeList|HTMLCollection|Array|Qry} [selector=document.documentElement] - CSS selector, element(s), or Qry instance
      * @param {Document} [doc=document] - Document context (for iframe support)
      */
     constructor(selector = document.documentElement, doc = document) {
@@ -26,30 +26,31 @@ class Qry {
             return;
         }
 
-        // Handle different input types
         if (selector instanceof HTMLElement || selector instanceof SVGElement) {
             this.#element = selector;
+        } else if (selector instanceof NodeList || selector instanceof HTMLCollection || Array.isArray(selector)) {
+            const elements = Array.from(selector);
+            if (elements.length === 1) {
+                this.#element = elements[0];
+            } else if (elements.length > 1) {
+                this.#elements = elements;
+                this.#isCollection = true;
+            }
         } else if (selector instanceof Qry) {
             return selector;
         } else if (typeof selector === 'string') {
-            // ID selector (fastest)
-            if (selector.startsWith('#')) {
+            if (selector.startsWith('#') && !selector.includes(' ') && !selector.includes(',')) {
                 this.#element = this.#doc.getElementById(selector.slice(1));
             } else if (selector.includes(',') || selector.includes(' ') || selector.includes('.') || selector.includes('[')) {
-                // Complex selector - could return multiple elements
                 const elements = Array.from(this.#doc.querySelectorAll(selector));
                 if (elements.length === 1) {
                     this.#element = elements[0];
                 } else if (elements.length > 1) {
                     this.#elements = elements;
                     this.#isCollection = true;
-                } else {
-                    this.#element = null;
                 }
             } else {
-                // Simple tag name
-                const element = this.#doc.querySelector(selector);
-                this.#element = element;
+                this.#element = this.#doc.querySelector(selector);
             }
         }
     }
@@ -68,7 +69,7 @@ class Qry {
      * @returns {HTMLElement|SVGElement|null} The first matched element
      */
     get el() {
-        return this.#element;
+        return this.#isCollection ? this.#elements[0] : this.#element;
     }
 
     /**
@@ -76,7 +77,7 @@ class Qry {
      * @returns {Array<HTMLElement|SVGElement>} Array of matched elements
      */
     get els() {
-        return this.#isCollection ? this.#elements : (this.#element ? [this.#element] : []);
+        return this.#isCollection ? [...this.#elements] : (this.#element ? [this.#element] : []);
     }
 
     /**
@@ -87,14 +88,50 @@ class Qry {
         return this.#isCollection ? this.#elements.length > 0 : this.#element !== null;
     }
 
-    // Private helper for collection operations
-    #each(fn) {
+    /**
+     * Get number of matched elements
+     * @returns {number} Count of matched elements
+     */
+    get length() {
+        return this.#isCollection ? this.#elements.length : (this.#element ? 1 : 0);
+    }
+
+    /**
+     * Iterate over matched elements
+     * @param {Function} fn - Callback (element, index) => void
+     * @returns {Qry} This for chaining
+     * @example
+     * $('.items').each((el, i) => console.log(i, el.textContent))
+     */
+    each(fn) {
         if (this.#isCollection) {
-            this.#elements.forEach(fn);
+            this.#elements.forEach((el, i) => fn(el, i));
         } else if (this.#element) {
-            fn(this.#element);
+            fn(this.#element, 0);
         }
         return this;
+    }
+
+    /**
+     * Get first element from collection
+     * @returns {Qry} New Qry instance with first element
+     * @example
+     * $('.items').first().cls('+active')
+     */
+    first() {
+        const el = this.#isCollection ? this.#elements[0] : this.#element;
+        return new Qry(el || null, this.#doc);
+    }
+
+    /**
+     * Get last element from collection
+     * @returns {Qry} New Qry instance with last element
+     * @example
+     * $('.items').last().cls('+active')
+     */
+    last() {
+        const el = this.#isCollection ? this.#elements[this.#elements.length - 1] : this.#element;
+        return new Qry(el || null, this.#doc);
     }
 
     /**
@@ -107,10 +144,9 @@ class Qry {
      */
     text(content) {
         if (content === undefined) {
-            return this.#element ? this.#element.textContent : '';
+            return this.el?.textContent ?? '';
         }
-        this.#each(el => el.textContent = content);
-        return this;
+        return this.each(el => el.textContent = content);
     }
 
     /**
@@ -123,10 +159,19 @@ class Qry {
      */
     html(content) {
         if (content === undefined) {
-            return this.#element ? this.#element.innerHTML : '';
+            return this.el?.innerHTML ?? '';
         }
-        this.#each(el => el.innerHTML = content);
-        return this;
+        return this.each(el => el.innerHTML = content);
+    }
+
+    /**
+     * Clear element contents
+     * @returns {Qry} This for chaining
+     * @example
+     * $('#container').empty()
+     */
+    empty() {
+        return this.each(el => el.innerHTML = '');
     }
 
     /**
@@ -151,7 +196,7 @@ class Qry {
         const tokens = classes.split(' ').filter(Boolean);
         let queryResult = undefined;
 
-        this.#each(el => {
+        this.each(el => {
             tokens.forEach(cls => {
                 const action = cls[0];
                 const name = cls.slice(1) || cls;
@@ -161,7 +206,6 @@ class Qry {
                     case '-': el.classList.remove(name); break;
                     case '~': el.classList.toggle(name); break;
                     case '?':
-                        // Return boolean for first element only
                         if (queryResult === undefined) {
                             queryResult = el.classList.contains(name);
                         }
@@ -192,17 +236,12 @@ class Qry {
         }
 
         if (value === undefined) {
-            return this.#element ? this.#element.getAttribute(name) : null;
+            return this.el?.getAttribute(name) ?? null;
         }
 
-        this.#each(el => {
-            if (value === null) {
-                el.removeAttribute(name);
-            } else {
-                el.setAttribute(name, value);
-            }
+        return this.each(el => {
+            value === null ? el.removeAttribute(name) : el.setAttribute(name, value);
         });
-        return this;
     }
 
     /**
@@ -213,10 +252,7 @@ class Qry {
      * @example
      * $('.box').css('background')                  // Get computed style
      * $('.box').css('background', 'red')           // Set style
-     * $('.box').css({                              // Set multiple
-     *     background: 'red',
-     *     padding: '20px'
-     * })
+     * $('.box').css({ background: 'red', padding: '20px' })  // Set multiple
      */
     css(prop, value) {
         if (typeof prop === 'object') {
@@ -225,11 +261,10 @@ class Qry {
         }
 
         if (value === undefined) {
-            return this.#element ? getComputedStyle(this.#element)[prop] : '';
+            return this.el ? getComputedStyle(this.el)[prop] : '';
         }
 
-        this.#each(el => el.style[prop] = value);
-        return this;
+        return this.each(el => el.style[prop] = value);
     }
 
     /**
@@ -243,8 +278,7 @@ class Qry {
      * $('#form').on('submit', handleSubmit, { once: true })
      */
     on(event, handler, options) {
-        this.#each(el => el.addEventListener(event, handler, options));
-        return this;
+        return this.each(el => el.addEventListener(event, handler, options));
     }
 
     /**
@@ -256,8 +290,7 @@ class Qry {
      * $('#btn').off('click', myHandler)
      */
     off(event, handler) {
-        this.#each(el => el.removeEventListener(event, handler));
-        return this;
+        return this.each(el => el.removeEventListener(event, handler));
     }
 
     /**
@@ -267,7 +300,6 @@ class Qry {
      * @param {Function} handler - Event handler (receives event, called with matched element as context)
      * @returns {Qry} This for chaining
      * @example
-     * // Handle clicks on items, even ones added later
      * $('#list').delegate('.item', 'click', function(e) {
      *     console.log('Clicked:', this);  // 'this' is the matched .item element
      * });
@@ -291,7 +323,7 @@ class Qry {
      */
     click(handler) {
         if (!handler) {
-            this.#element?.click();
+            this.el?.click();
             return this;
         }
         return this.on('click', handler);
@@ -308,21 +340,13 @@ class Qry {
      * $('#cart').trigger('item-added', { id: 123 })        // Custom event with data
      */
     trigger(event, detail) {
-        this.#each(el => {
-            // Handle native events (click, submit, focus, etc.)
+        return this.each(el => {
             if (typeof el[event] === 'function' && !detail) {
                 el[event]();
             } else {
-                // Custom events or events with data
-                const evt = new CustomEvent(event, {
-                    bubbles: true,
-                    cancelable: true,
-                    detail: detail
-                });
-                el.dispatchEvent(evt);
+                el.dispatchEvent(new CustomEvent(event, { bubbles: true, cancelable: true, detail }));
             }
         });
-        return this;
     }
 
     /**
@@ -330,25 +354,19 @@ class Qry {
      * @param {string|HTMLElement|Qry} content - HTML string, element, or Qry instance
      * @returns {Qry} This for chaining
      * @example
-     * $('#list').append('<li>Item</li>')           // HTML string
-     * $('#list').append(document.createElement('li'))  // Element
-     * $('#list').append($('.item'))                // Qry instance
+     * $('#list').append('<li>Item</li>')
+     * $('#list').append($('.item'))
      */
     append(content) {
-        this.#each(el => {
+        return this.each(el => {
             if (content instanceof Qry) {
-                if (content.#isCollection) {
-                    content.#elements.forEach(child => el.appendChild(child));
-                } else if (content.#element) {
-                    el.appendChild(content.#element);
-                }
+                content.els.forEach(child => el.appendChild(child));
             } else if (content instanceof HTMLElement) {
                 el.appendChild(content);
             } else if (typeof content === 'string') {
                 el.insertAdjacentHTML('beforeend', content);
             }
         });
-        return this;
     }
 
     /**
@@ -356,22 +374,92 @@ class Qry {
      * @param {string|HTMLElement|Qry} content - HTML string, element, or Qry instance
      * @returns {Qry} This for chaining
      * @example
-     * $('#list').prepend('<li>First</li>')         // HTML string
+     * $('#list').prepend('<li>First</li>')
      */
     prepend(content) {
-        this.#each(el => {
+        return this.each(el => {
             if (content instanceof Qry) {
-                if (content.#isCollection) {
-                    content.#elements.reverse().forEach(child => el.insertBefore(child, el.firstChild));
-                } else if (content.#element) {
-                    el.insertBefore(content.#element, el.firstChild);
-                }
+                content.els.reverse().forEach(child => el.insertBefore(child, el.firstChild));
             } else if (content instanceof HTMLElement) {
                 el.insertBefore(content, el.firstChild);
             } else if (typeof content === 'string') {
                 el.insertAdjacentHTML('afterbegin', content);
             }
         });
+    }
+
+    /**
+     * Insert content before element(s)
+     * @param {string|HTMLElement|Qry} content - HTML string, element, or Qry instance
+     * @returns {Qry} This for chaining
+     * @example
+     * $('#item').before('<li>Before</li>')
+     */
+    before(content) {
+        return this.each(el => {
+            if (content instanceof Qry) {
+                content.els.forEach(child => el.parentNode?.insertBefore(child, el));
+            } else if (content instanceof HTMLElement) {
+                el.parentNode?.insertBefore(content, el);
+            } else if (typeof content === 'string') {
+                el.insertAdjacentHTML('beforebegin', content);
+            }
+        });
+    }
+
+    /**
+     * Insert content after element(s)
+     * @param {string|HTMLElement|Qry} content - HTML string, element, or Qry instance
+     * @returns {Qry} This for chaining
+     * @example
+     * $('#item').after('<li>After</li>')
+     */
+    after(content) {
+        return this.each(el => {
+            if (content instanceof Qry) {
+                content.els.reverse().forEach(child => el.parentNode?.insertBefore(child, el.nextSibling));
+            } else if (content instanceof HTMLElement) {
+                el.parentNode?.insertBefore(content, el.nextSibling);
+            } else if (typeof content === 'string') {
+                el.insertAdjacentHTML('afterend', content);
+            }
+        });
+    }
+
+    /**
+     * Mount this element into a target container (append)
+     * @param {string|HTMLElement|Qry} target - Target selector, element, or Qry instance
+     * @returns {Qry} This for chaining
+     * @example
+     * $.create('div', { text: 'Hello' }).mount('#container')
+     */
+    mount(target) {
+        const t = target instanceof Qry ? target : new Qry(target, this.#doc);
+        t.append(this);
+        return this;
+    }
+
+    /**
+     * Append this element to a target (jQuery compatible)
+     * @param {string|HTMLElement|Qry} target - Target selector, element, or Qry instance
+     * @returns {Qry} This for chaining
+     * @example
+     * $.create('li', { text: 'Item' }).appendTo('#list')
+     */
+    appendTo(target) {
+        return this.mount(target);
+    }
+
+    /**
+     * Prepend this element to a target (jQuery compatible)
+     * @param {string|HTMLElement|Qry} target - Target selector, element, or Qry instance
+     * @returns {Qry} This for chaining
+     * @example
+     * $.create('li', { text: 'First' }).prependTo('#list')
+     */
+    prependTo(target) {
+        const t = target instanceof Qry ? target : new Qry(target, this.#doc);
+        t.prepend(this);
         return this;
     }
 
@@ -382,8 +470,7 @@ class Qry {
      * $('.old-item').remove()
      */
     remove() {
-        this.#each(el => el.remove());
-        return this;
+        return this.each(el => el.remove());
     }
 
     /**
@@ -396,10 +483,9 @@ class Qry {
      */
     val(value) {
         if (value === undefined) {
-            return this.#element ? this.#element.value : '';
+            return this.el?.value ?? '';
         }
-        this.#each(el => el.value = value);
-        return this;
+        return this.each(el => el.value = value);
     }
 
     /**
@@ -409,8 +495,7 @@ class Qry {
      * $('.modal').show()
      */
     show() {
-        this.#each(el => el.style.display = '');
-        return this;
+        return this.each(el => el.style.display = '');
     }
 
     /**
@@ -420,8 +505,7 @@ class Qry {
      * $('.modal').hide()
      */
     hide() {
-        this.#each(el => el.style.display = 'none');
-        return this;
+        return this.each(el => el.style.display = 'none');
     }
 
     /**
@@ -429,15 +513,29 @@ class Qry {
      * @param {string} selector - CSS selector
      * @returns {Qry} New Qry instance with matched descendants
      * @example
-     * $('#container').find('.item')            // Find all items
-     * $('#form').find('#submit')               // Find by ID
+     * $('#container').find('.item')
+     * $('#form').find('#submit')
      */
     find(selector) {
-        if (!this.#element) return new Qry(null, this.#doc);
-        return new Qry(selector.startsWith('#') ?
-            this.#element.querySelector(selector) :
-            this.#element.querySelectorAll(selector), this.#doc
-        );
+        if (!this.el) return new Qry(null, this.#doc);
+        return new Qry(this.el.querySelectorAll(selector), this.#doc);
+    }
+
+    /**
+     * Get direct children, optionally filtered by selector
+     * @param {string} [selector] - Optional CSS selector to filter children
+     * @returns {Qry} New Qry instance with children
+     * @example
+     * $('#list').children()            // All direct children
+     * $('#list').children('.active')   // Filtered children
+     */
+    children(selector) {
+        if (!this.el) return new Qry(null, this.#doc);
+        let children = Array.from(this.el.children);
+        if (selector) {
+            children = children.filter(el => el.matches(selector));
+        }
+        return new Qry(children.length === 1 ? children[0] : children, this.#doc);
     }
 
     /**
@@ -448,28 +546,18 @@ class Qry {
      * @example
      * $.create('div')                              // Empty div
      * $.create('div', { class: 'card' })           // With class
-     * $.create('button', {                         // With multiple props
-     *     class: 'btn primary',
-     *     text: 'Click me',
-     *     id: 'submit-btn'
-     * })
+     * $.create('button', { class: 'btn', text: 'Click me', id: 'submit-btn' })
      */
     create(tag, props = {}) {
         const doc = this.#doc || document;
         const element = doc.createElement(tag);
         const qry = new Qry(element, doc);
 
-        // Apply properties
         Object.entries(props).forEach(([key, value]) => {
-            if (key === 'class') {
-                qry.cls(value);
-            } else if (key === 'text') {
-                qry.text(value);
-            } else if (key === 'html') {
-                qry.html(value);
-            } else {
-                qry.attr(key, value);
-            }
+            if (key === 'class') qry.cls(value);
+            else if (key === 'text') qry.text(value);
+            else if (key === 'html') qry.html(value);
+            else qry.attr(key, value);
         });
 
         return qry;
@@ -484,8 +572,7 @@ class Qry {
      * $('#submit').enable(false)       // Disable
      */
     enable(state = true) {
-        this.#each(el => el.disabled = !state);
-        return this;
+        return this.each(el => el.disabled = !state);
     }
 
     /**
@@ -505,7 +592,7 @@ class Qry {
      * $('#email').focus()
      */
     focus() {
-        this.#element?.focus();
+        this.el?.focus();
         return this;
     }
 
@@ -513,13 +600,11 @@ class Qry {
      * Get parent element
      * @returns {Qry} New Qry instance wrapping parent element
      * @example
-     * $('#child').parent()             // Get parent
-     * $('#child').parent().hide()      // Hide parent
+     * $('#child').parent()
+     * $('#child').parent().hide()
      */
     parent() {
-        return this.#element?.parentElement ?
-            new Qry(this.#element.parentElement, this.#doc) :
-            new Qry(null, this.#doc);
+        return new Qry(this.el?.parentElement || null, this.#doc);
     }
 
     /**
@@ -527,21 +612,162 @@ class Qry {
      * @param {string} selector - CSS selector
      * @returns {Qry} New Qry instance with matched ancestor or empty if none found
      * @example
-     * $(e.target).closest('.card')                 // Find parent card
-     * $(e.target).closest('button')                // Find button (or self if button)
-     *
-     * // Useful for event delegation:
-     * $('#container').on('click', (e) => {
-     *     const card = $(e.target).closest('.card');
-     *     if (card.exists) {
-     *         card.cls('~selected');
-     *     }
-     * });
+     * $(e.target).closest('.card')
+     * $(e.target).closest('button')
      */
     closest(selector) {
-        if (!this.#element) return new Qry(null, this.#doc);
-        const el = this.#element.closest(selector);
-        return new Qry(el, this.#doc);
+        if (!this.el) return new Qry(null, this.#doc);
+        return new Qry(this.el.closest(selector), this.#doc);
+    }
+
+    /**
+     * Get next sibling element
+     * @returns {Qry} New Qry instance with next sibling
+     * @example
+     * $('#item').next()
+     */
+    next() {
+        return new Qry(this.el?.nextElementSibling || null, this.#doc);
+    }
+
+    /**
+     * Get previous sibling element
+     * @returns {Qry} New Qry instance with previous sibling
+     * @example
+     * $('#item').prev()
+     */
+    prev() {
+        return new Qry(this.el?.previousElementSibling || null, this.#doc);
+    }
+
+    /**
+     * Get all sibling elements
+     * @param {string} [selector] - Optional selector to filter siblings
+     * @returns {Qry} New Qry instance with siblings
+     * @example
+     * $('#item').siblings()
+     * $('#item').siblings('.active')
+     */
+    siblings(selector) {
+        if (!this.el?.parentElement) return new Qry(null, this.#doc);
+        let sibs = Array.from(this.el.parentElement.children).filter(el => el !== this.el);
+        if (selector) sibs = sibs.filter(el => el.matches(selector));
+        return new Qry(sibs, this.#doc);
+    }
+
+    /**
+     * Get element at index from collection
+     * @param {number} index - Zero-based index (negative counts from end)
+     * @returns {Qry} New Qry instance with element at index
+     * @example
+     * $('.items').eq(0)    // First
+     * $('.items').eq(-1)   // Last
+     */
+    eq(index) {
+        const els = this.els;
+        const i = index < 0 ? els.length + index : index;
+        return new Qry(els[i] || null, this.#doc);
+    }
+
+    /**
+     * Clone element(s)
+     * @param {boolean} [deep=true] - Clone children too
+     * @returns {Qry} New Qry instance with cloned element(s)
+     * @example
+     * $('#template').clone()
+     */
+    clone(deep = true) {
+        const clones = this.els.map(el => el.cloneNode(deep));
+        return new Qry(clones.length === 1 ? clones[0] : clones, this.#doc);
+    }
+
+    /**
+     * Replace element(s) with new content
+     * @param {string|HTMLElement|Qry} content - Replacement content
+     * @returns {Qry} New Qry instance with replacement element(s)
+     * @example
+     * $('#old').replaceWith('<div>new</div>')
+     */
+    replaceWith(content) {
+        const replacements = [];
+        this.each(el => {
+            if (typeof content === 'string') {
+                el.insertAdjacentHTML('beforebegin', content);
+                replacements.push(el.previousElementSibling);
+                el.remove();
+            } else if (content instanceof Qry) {
+                el.replaceWith(content.el);
+                replacements.push(content.el);
+            } else if (content instanceof HTMLElement) {
+                el.replaceWith(content);
+                replacements.push(content);
+            }
+        });
+        return new Qry(replacements.length === 1 ? replacements[0] : replacements, this.#doc);
+    }
+
+    /**
+     * Check if element matches selector
+     * @param {string} selector - CSS selector
+     * @returns {boolean} True if matches
+     * @example
+     * $('#btn').is('.active')
+     * $('#btn').is('button')
+     */
+    is(selector) {
+        return this.el?.matches(selector) ?? false;
+    }
+
+    /**
+     * Filter collection by selector
+     * @param {string} selector - CSS selector
+     * @returns {Qry} New Qry instance with filtered elements
+     * @example
+     * $('.items').filter('.active')
+     */
+    filter(selector) {
+        const filtered = this.els.filter(el => el.matches(selector));
+        return new Qry(filtered, this.#doc);
+    }
+
+    /**
+     * Get index of element among siblings
+     * @returns {number} Zero-based index, or -1 if not found
+     * @example
+     * $('#item').index()
+     */
+    index() {
+        if (!this.el?.parentElement) return -1;
+        return Array.from(this.el.parentElement.children).indexOf(this.el);
+    }
+
+    /**
+     * Wrap element(s) with HTML container
+     * @param {string} html - HTML string for wrapper
+     * @returns {Qry} This for chaining
+     * @example
+     * $('.item').wrap('<div class="wrapper"></div>')
+     */
+    wrap(html) {
+        return this.each(el => {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html;
+            const container = wrapper.firstElementChild;
+            el.parentNode?.insertBefore(container, el);
+            container.appendChild(el);
+        });
+    }
+
+    /**
+     * Get element position relative to document
+     * @returns {{top: number, left: number}} Position object
+     * @example
+     * const pos = $('#box').offset()
+     */
+    offset() {
+        if (!this.el) return { top: 0, left: 0 };
+        const rect = this.el.getBoundingClientRect();
+        return { top: rect.top + window.scrollY, left: rect.left + window.scrollX };
     }
 
     /**
@@ -555,10 +781,9 @@ class Qry {
      */
     data(key, value) {
         if (value === undefined) {
-            return this.#element ? this.#element.dataset[key] : '';
+            return this.el?.dataset[key] ?? '';
         }
-        this.#each(el => el.dataset[key] = value);
-        return this;
+        return this.each(el => el.dataset[key] = value);
     }
 
     /**
@@ -566,9 +791,7 @@ class Qry {
      * @param {Function} fn - Callback function
      * @returns {Qry} This for chaining
      * @example
-     * $.ready(() => {
-     *     console.log('DOM ready!');
-     * });
+     * $.ready(() => console.log('DOM ready!'));
      */
     ready(fn) {
         if (this.#doc.readyState === 'loading') {
@@ -597,29 +820,16 @@ function $(selector) {
     return qry.$(selector);
 }
 
-/**
- * Execute callback when DOM is ready
- * @param {Function} fn - Callback function
- * @example
- * $.ready(() => console.log('DOM ready!'));
- */
-$.ready = (fn) => qry.ready(fn);
+/** Execute callback when DOM is ready */
+$.ready = fn => qry.ready(fn);
 
-/**
- * Create new element with properties
- * @param {string} tag - HTML tag name
- * @param {Object} [props] - Element properties
- * @returns {Qry} New Qry instance
- * @example
- * $.create('div', { class: 'card', text: 'Hello' })
- */
+/** Create new element with properties */
 $.create = (tag, props) => qry.create(tag, props);
 
-// Make $ available globally (avoid conflicts by checking first)
+// Make $ available globally
 if (typeof window !== 'undefined' && !window.$) {
     window.$ = $;
 }
 
-// Export both the class, instance, and $ function
 export { Qry, qry, $ };
 export default $;
