@@ -136,8 +136,8 @@ export class QryEnv {
     modal(sel) {
         const el = $(sel).el;
         const m = {
-            show: () => { el?.showModal?.() ?? el?.show?.(); return m; },
-            hide: () => { el?.close?.() ?? el?.hide?.(); return m; },
+            show: () => { if (el?.showModal) el.showModal(); else el?.show?.(); return m; },
+            hide: () => { el?.close?.(); return m; },
             toggle: () => { el?.open ? el.close() : el?.showModal?.(); return m; }
         };
         return m;

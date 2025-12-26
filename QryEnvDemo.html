@@ -89,7 +89,7 @@
     <!-- Formatting -->
     <article>
         <h2><i data-lucide="type"></i> Formatting Helpers</h2>
-        <p>Date, number, currency, and file size formatting.</p>
+        <p>Date, number, currency, duration, and file size formatting.</p>
         <pre id="format-result"><code>// Results appear here</code></pre>
         <button id="btn-format"><i data-lucide="play"></i> Show Formats</button>
     </article>
@@ -300,7 +300,7 @@
             // API
             this.bind('#btn-api', 'click', async () => {
                 const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3');
-                $('#api-result').find('code').text(JSON.stringify(data, null, 2));
+                $('#api-result code').text(JSON.stringify(data, null, 2));
                 this.success('Users loaded!');
             });
 
@@ -360,9 +360,10 @@
                     `currency: ${this.format.currency(99.90)}`,
                     `bytes:    ${this.format.bytes(1536000)}`,
                     `percent:  ${this.format.percent(0.857, 1)}`,
+                    `duration: ${this.format.duration(3661000)}`,
                     `relative: ${this.format.relative(Date.now() - 3600000)}`
                 ];
-                $('#format-result').find('code').text(results.join('\n'));
+                $('#format-result code').text(results.join('\n'));
                 this.success('Formats displayed!');
             });
 

@@ -28,6 +28,8 @@ class Qry {
 
         if (selector instanceof HTMLElement || selector instanceof SVGElement) {
             this.#element = selector;
+        } else if (selector instanceof Document || selector instanceof Window) {
+            this.#element = selector;
         } else if (selector instanceof NodeList || selector instanceof HTMLCollection || Array.isArray(selector)) {
             const elements = Array.from(selector);
             if (elements.length === 1) {
