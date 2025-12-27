@@ -1,42 +1,86 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QryEnv 1.2 - Demo</title>
-    <link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/svg/qry-logo-white.svg">
-
-    <!-- Stack: PicoCSS + Shoelace + Lucide -->
+    <title>QryEnv 2.0 - Demo</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.1/cdn/themes/light.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.1/cdn/themes/dark.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.1/cdn/shoelace-autoloader.js"></script>
-</head>
+    <style>
+        :root { --pico-primary: #00205B; --pico-primary-hover: #001845; }
 
+        /* Header */
+        header.app-header { background: linear-gradient(135deg, #00205B, #0047AB, #00205B); color: #fff; padding: 1rem 0; }
+        header.app-header nav { margin: 0; padding: 0 1rem; }
+        header.app-header a, header.app-header strong { color: #fff; }
+        header.app-header [role=button] { --pico-background-color: #fff; --pico-border-color: #fff; color: #00205B; }
+
+        /* Buttons */
+        .btns { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .btns button { margin: 0; }
+        button.success { --pico-background-color: var(--qry-success); --pico-border-color: var(--qry-success); }
+        button.warning { --pico-background-color: var(--qry-warning); --pico-border-color: var(--qry-warning); }
+        button.danger { --pico-background-color: var(--qry-error); --pico-border-color: var(--qry-error); }
+
+        /* Output */
+        .output { background: var(--qry-surface); border: 1px solid var(--qry-border); border-radius: 1rem; padding: 1rem; font-family: monospace; font-size: .85rem; margin-top: 1rem; white-space: pre-wrap; min-height: 2rem; }
+
+        /* Dropzone */
+        .dropzone { border: 2px dashed var(--qry-border); border-radius: 1rem; padding: 2rem; text-align: center; cursor: pointer; transition: .2s; }
+        .dropzone:hover, .dropzone.over { border-color: var(--qry-primary); background: rgba(0,32,91,.05); }
+        .dropzone i { width: 3rem; height: 3rem; color: var(--qry-muted); }
+
+        /* Form validation */
+        .field-error { color: var(--qry-error); font-size: .85rem; margin-top: .25rem; }
+
+        /* Misc */
+        kbd { background: var(--qry-surface); border: 1px solid var(--qry-border); border-radius: .5rem; padding: .1rem .5rem; font-size: .85rem; }
+        footer { text-align: center; padding: 2rem; color: var(--qry-muted); }
+        article h3 { display: flex; align-items: center; gap: .5rem; }
+        article h3 i { width: 1.25rem; height: 1.25rem; }
+        .grid-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: .5rem; text-align: center; margin-bottom: 1rem; }
+        .grid-features div { padding: .75rem; background: var(--qry-surface); border: 1px solid var(--qry-border); border-radius: 1rem; }
+        .grid-features i { color: var(--qry-primary); }
+        .grid-features small { display: block; color: var(--qry-muted); }
+    </style>
+</head>
 <body>
-<header class="container-fluid qry-header">
+
+<header class="container-fluid app-header">
     <nav class="container">
+        <ul><li><strong><i data-lucide="zap"></i> QryEnv 2.0</strong></li></ul>
         <ul>
-            <li><strong><i data-lucide="zap"></i> QryEnv 1.2</strong></li>
-        </ul>
-        <ul>
-            <li><a href="#">Docs</a></li>
-            <li><a href="#" role="button">GitHub</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="https://github.com/Bloechle/qry" role="button">GitHub</a></li>
         </ul>
     </nav>
 </header>
 
 <main class="container">
     <hgroup>
-        <h1>QryEnv 1.2</h1>
-        <p>PicoCSS + Shoelace + Qry.js + Lucide</p>
+        <h1>QryEnv 2.0</h1>
+        <p>Generic webapp bootstrapper • Qry.js + PicoCSS + Lucide</p>
     </hgroup>
 
-    <!-- Toast Demo -->
+    <!-- Features Overview -->
+    <section id="features">
+        <div class="grid-features">
+            <div><i data-lucide="bell"></i><small>Toast</small></div>
+            <div><i data-lucide="database"></i><small>State</small></div>
+            <div><i data-lucide="moon"></i><small>Theme</small></div>
+            <div><i data-lucide="hard-drive"></i><small>Storage</small></div>
+            <div><i data-lucide="keyboard"></i><small>Hotkeys</small></div>
+            <div><i data-lucide="cloud"></i><small>API</small></div>
+            <div><i data-lucide="check-square"></i><small>Forms</small></div>
+            <div><i data-lucide="upload"></i><small>Drop</small></div>
+        </div>
+    </section>
+
+    <!-- Toast -->
     <article>
-        <h2><i data-lucide="bell"></i> Toast Notifications</h2>
-        <div class="grid">
+        <h3><i data-lucide="bell"></i> Toast Notifications</h3>
+        <p>4 notification types with auto-dismiss.</p>
+        <div class="btns">
             <button id="btn-success" class="success"><i data-lucide="check"></i> Success</button>
             <button id="btn-error" class="danger"><i data-lucide="x"></i> Error</button>
             <button id="btn-warning" class="warning"><i data-lucide="alert-triangle"></i> Warning</button>
@@ -44,283 +88,207 @@
         </div>
     </article>
 
-    <!-- API Demo -->
+    <!-- State -->
     <article>
-        <h2><i data-lucide="cloud"></i> API Helper</h2>
-        <p>Fetch data with built-in logging and error handling.</p>
-        <button id="btn-api"><i data-lucide="download"></i> Fetch Users</button>
-        <pre><code id="api-output">// Result appears here</code></pre>
-    </article>
-
-    <!-- Action Demo -->
-    <article>
-        <h2><i data-lucide="play"></i> Actions</h2>
-        <p>Tracked actions with automatic toast and logging.</p>
-        <div class="grid">
-            <button id="btn-action-ok"><i data-lucide="check-circle"></i> Action OK</button>
-            <button id="btn-action-fail" class="danger"><i data-lucide="x-circle"></i> Action Fail</button>
-            <button id="btn-action-loading" class="secondary"><i data-lucide="loader"></i> With Loading</button>
+        <h3><i data-lucide="database"></i> Reactive State</h3>
+        <p>Simple state with <code>get()</code>, <code>set()</code>, <code>watch()</code>, <code>update()</code>.</p>
+        <div class="btns">
+            <button id="btn-inc"><i data-lucide="plus"></i> +1</button>
+            <button id="btn-dec"><i data-lucide="minus"></i> -1</button>
+            <button id="btn-x2" class="secondary"><i data-lucide="x"></i> ×2</button>
+            <button id="btn-reset" class="secondary"><i data-lucide="rotate-ccw"></i> Reset</button>
         </div>
+        <div id="counter" class="output">Counter: 0</div>
     </article>
 
-    <!-- Confirm & Loading -->
+    <!-- Dialogs -->
     <article>
-        <h2><i data-lucide="alert-circle"></i> Confirm & Loading</h2>
-        <p>Built-in confirm dialog and loading overlay.</p>
-        <div class="grid">
-            <button id="btn-confirm"><i data-lucide="help-circle"></i> Confirm Dialog</button>
-            <button id="btn-confirm-danger" class="danger"><i data-lucide="trash-2"></i> Danger Confirm</button>
+        <h3><i data-lucide="message-square"></i> Dialogs</h3>
+        <p>Built-in confirm dialog, loading overlay, and modal helper.</p>
+        <div class="btns">
+            <button id="btn-confirm"><i data-lucide="help-circle"></i> Confirm</button>
+            <button id="btn-danger" class="danger"><i data-lucide="trash-2"></i> Danger Confirm</button>
             <button id="btn-loading" class="secondary"><i data-lucide="loader"></i> Loading 2s</button>
+            <button id="btn-modal" class="secondary"><i data-lucide="maximize-2"></i> Custom Modal</button>
         </div>
     </article>
 
-    <!-- Storage & Clipboard -->
+    <!-- Custom Modal -->
+    <dialog id="demo-modal">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev" id="modal-close"></button>
+                <h3>Custom Modal</h3>
+            </header>
+            <p>This is a custom modal using the <code>modal()</code> helper with PicoCSS styling.</p>
+            <footer>
+                <button id="modal-cancel" class="secondary">Cancel</button>
+                <button id="modal-ok">OK</button>
+            </footer>
+        </article>
+    </dialog>
+
+    <!-- API -->
     <article>
-        <h2><i data-lucide="database"></i> Storage & Clipboard</h2>
-        <p>LocalStorage wrapper and clipboard helpers.</p>
-        <div class="grid">
-            <input type="text" id="storage-input" placeholder="Type something...">
-            <button id="btn-storage-save"><i data-lucide="save"></i> Save</button>
-            <button id="btn-storage-load" class="secondary"><i data-lucide="download"></i> Load</button>
-            <button id="btn-copy"><i data-lucide="copy"></i> Copy Text</button>
+        <h3><i data-lucide="cloud"></i> API Helper</h3>
+        <p>Fetch JSON with optional loading overlay.</p>
+        <div class="btns">
+            <button id="btn-api"><i data-lucide="download"></i> Fetch Users</button>
+            <button id="btn-api-loading" class="secondary"><i data-lucide="loader"></i> With Loading</button>
+        </div>
+        <div id="api-out" class="output">// Click to fetch data</div>
+    </article>
+
+    <!-- Actions -->
+    <article>
+        <h3><i data-lucide="play"></i> Actions</h3>
+        <p>Wrap async operations with automatic toast and loading.</p>
+        <div class="btns">
+            <button id="btn-action-ok"><i data-lucide="check-circle"></i> Success</button>
+            <button id="btn-action-fail" class="danger"><i data-lucide="x-circle"></i> Fail</button>
+            <button id="btn-action-load" class="secondary"><i data-lucide="loader"></i> With Loading</button>
         </div>
     </article>
 
-    <!-- Formatting -->
+    <!-- Forms -->
     <article>
-        <h2><i data-lucide="type"></i> Formatting Helpers</h2>
-        <p>Date, number, currency, duration, and file size formatting.</p>
-        <pre><code id="format-output">// Results appear here</code></pre>
-        <button id="btn-format"><i data-lucide="play"></i> Show Formats</button>
-    </article>
-
-    <!-- Keyboard -->
-    <article>
-        <h2><i data-lucide="keyboard"></i> Keyboard Shortcuts</h2>
-        <p>Try these shortcuts:</p>
-        <ul>
-            <li><kbd>Ctrl+S</kbd> - Save action</li>
-            <li><kbd>Ctrl+K</kbd> - Toggle theme</li>
-            <li><kbd>Escape</kbd> - Info toast</li>
-        </ul>
-    </article>
-
-    <!-- Form Demo -->
-    <article>
-        <h2><i data-lucide="edit-3"></i> Form (Pure PicoCSS)</h2>
+        <h3><i data-lucide="check-square"></i> Form Validation</h3>
+        <p>Extract data and validate with <code>formData()</code>, <code>formValidate()</code>.</p>
         <form id="demo-form">
             <div class="grid">
                 <label>
-                    Name
-                    <input type="text" id="input-name" placeholder="Jean-Luc">
+                    Name *
+                    <input type="text" name="name" placeholder="Your name">
+                    <div id="err-name" class="field-error"></div>
                 </label>
                 <label>
-                    Email
-                    <input type="email" id="input-email" placeholder="jl@example.com">
+                    Email *
+                    <input type="email" name="email" placeholder="you@example.com">
+                    <div id="err-email" class="field-error"></div>
                 </label>
             </div>
             <label>
                 Message
-                <textarea id="input-msg" placeholder="Your message..."></textarea>
+                <textarea name="message" placeholder="Optional message"></textarea>
             </label>
-            <button type="submit"><i data-lucide="send"></i> Submit</button>
+            <div class="btns">
+                <button type="submit"><i data-lucide="send"></i> Submit</button>
+                <button type="button" id="btn-form-reset" class="secondary">Reset</button>
+            </div>
         </form>
     </article>
 
-    <!-- Native Components -->
+    <!-- Storage -->
     <article>
-        <h2><i data-lucide="layers"></i> Native Components</h2>
-
-        <h3>Dialog (native HTML)</h3>
-        <button id="btn-modal"><i data-lucide="maximize-2"></i> Open Modal</button>
-        <dialog id="demo-modal">
-            <article>
-                <header>
-                    <button aria-label="Close" rel="prev" id="modal-close"></button>
-                    <h3>Modal Title</h3>
-                </header>
-                <p>This is a native HTML dialog, styled by PicoCSS.</p>
-                <footer>
-                    <button id="modal-cancel" class="secondary">Cancel</button>
-                    <button id="modal-confirm">Confirm</button>
-                </footer>
-            </article>
-        </dialog>
-
-        <h3>Accordion (native HTML)</h3>
-        <details>
-            <summary>Section 1</summary>
-            <p>Content for section 1. Uses native &lt;details&gt; element.</p>
-        </details>
-        <details>
-            <summary>Section 2</summary>
-            <p>Content for section 2. Zero JavaScript needed.</p>
-        </details>
-
-        <h3>Progress</h3>
-        <progress id="demo-progress" value="0" max="100"></progress>
-        <button id="btn-progress"><i data-lucide="loader"></i> Simulate Progress</button>
+        <h3><i data-lucide="hard-drive"></i> Storage & Clipboard</h3>
+        <p>Prefixed localStorage wrapper and clipboard helper.</p>
+        <div class="grid">
+            <input type="text" id="storage-input" placeholder="Type something...">
+        </div>
+        <div class="btns">
+            <button id="btn-save"><i data-lucide="save"></i> Save</button>
+            <button id="btn-load" class="secondary"><i data-lucide="download"></i> Load</button>
+            <button id="btn-copy" class="secondary"><i data-lucide="copy"></i> Copy</button>
+            <button id="btn-clear" class="danger"><i data-lucide="trash-2"></i> Clear All</button>
+        </div>
     </article>
 
-    <!-- Shoelace Components -->
+    <!-- Drop Zone -->
     <article>
-        <h2><i data-lucide="package"></i> Shoelace Components</h2>
-        <p>For advanced components not available in native HTML.</p>
-
-        <h3>Tabs</h3>
-        <sl-tab-group>
-            <sl-tab slot="nav" panel="tab1">General</sl-tab>
-            <sl-tab slot="nav" panel="tab2">Settings</sl-tab>
-            <sl-tab slot="nav" panel="tab3">Advanced</sl-tab>
-            <sl-tab-panel name="tab1">General content. Using Shoelace's tab component.</sl-tab-panel>
-            <sl-tab-panel name="tab2">Settings panel with configuration options.</sl-tab-panel>
-            <sl-tab-panel name="tab3">Advanced options for power users.</sl-tab-panel>
-        </sl-tab-group>
-
-        <h3>Rating</h3>
-        <sl-rating id="demo-rating" label="Rating" value="3"></sl-rating>
-        <p><small>Selected: <span id="rating-value">3</span> stars</small></p>
-
-        <h3>Color Picker</h3>
-        <sl-color-picker id="demo-color" label="Pick a color" value="#005395"></sl-color-picker>
-
-        <h3>Tooltip & Badge</h3>
-        <sl-tooltip content="This is a tooltip!">
-            <sl-button>Hover me</sl-button>
-        </sl-tooltip>
-        <sl-badge variant="primary">New</sl-badge>
-        <sl-badge variant="success">Active</sl-badge>
-        <sl-badge variant="warning">Pending</sl-badge>
-
-        <h3>Switch & Checkbox</h3>
-        <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
-            <sl-switch id="theme-switch">Dark mode</sl-switch>
-            <sl-checkbox>Remember me</sl-checkbox>
-            <sl-checkbox checked>Notifications</sl-checkbox>
+        <h3><i data-lucide="upload"></i> Drag & Drop</h3>
+        <p>File drop zone with <code>dropZone()</code> helper.</p>
+        <div id="dropzone" class="dropzone">
+            <i data-lucide="upload-cloud"></i>
+            <p><strong>Drop files here</strong></p>
+            <small>or click to browse</small>
+            <input type="file" id="file-input" multiple hidden>
         </div>
-
-        <h3>Input with icons</h3>
-        <sl-input placeholder="Search..." size="medium">
-            <sl-icon name="search" slot="prefix"></sl-icon>
-        </sl-input>
-
-        <h3>Select</h3>
-        <sl-select placeholder="Choose a framework" clearable>
-            <sl-option value="qry">Qry.js</sl-option>
-            <sl-option value="pico">PicoCSS</sl-option>
-            <sl-option value="shoelace">Shoelace</sl-option>
-        </sl-select>
-
-        <h3>Range Slider</h3>
-        <sl-range min="0" max="100" value="50" label="Volume"></sl-range>
-
-        <h3>Spinner & Skeleton</h3>
-        <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
-            <sl-spinner style="font-size: 2rem;"></sl-spinner>
-            <sl-skeleton effect="pulse" style="width: 100px; height: 1rem;"></sl-skeleton>
-            <sl-skeleton effect="pulse" style="width: 150px; height: 1rem;"></sl-skeleton>
-        </div>
-
-        <h3>Alert</h3>
-        <sl-alert variant="primary" open>
-            <sl-icon slot="icon" name="info-circle"></sl-icon>
-            <strong>Info:</strong> This is a Shoelace alert component.
-        </sl-alert>
-
-        <h3>Dialog</h3>
-        <sl-button id="btn-sl-dialog">Open Shoelace Dialog</sl-button>
-        <sl-dialog label="Shoelace Dialog" id="sl-dialog">
-            This is a Shoelace dialog. More customizable than native &lt;dialog&gt;.
-            <sl-button slot="footer" variant="primary" id="btn-sl-dialog-close">Close</sl-button>
-        </sl-dialog>
-
-        <h3>Carousel</h3>
-        <sl-carousel pagination navigation mouse-dragging loop style="--aspect-ratio: 3/1;">
-            <sl-carousel-item>
-                <div style="background: var(--pico-primary); height: 100%; display: grid; place-items: center; color: white; font-size: 1.5rem;">Slide 1</div>
-            </sl-carousel-item>
-            <sl-carousel-item>
-                <div style="background: #22c55e; height: 100%; display: grid; place-items: center; color: white; font-size: 1.5rem;">Slide 2</div>
-            </sl-carousel-item>
-            <sl-carousel-item>
-                <div style="background: #f59e0b; height: 100%; display: grid; place-items: center; color: white; font-size: 1.5rem;">Slide 3</div>
-            </sl-carousel-item>
-        </sl-carousel>
-
-        <h3>Tree</h3>
-        <sl-tree>
-            <sl-tree-item expanded>
-                Project
-                <sl-tree-item>src/
-                    <sl-tree-item>index.js</sl-tree-item>
-                    <sl-tree-item>app.js</sl-tree-item>
-                </sl-tree-item>
-                <sl-tree-item>public/
-                    <sl-tree-item>index.html</sl-tree-item>
-                </sl-tree-item>
-                <sl-tree-item>package.json</sl-tree-item>
-            </sl-tree-item>
-        </sl-tree>
+        <div id="files" class="output" style="display:none"></div>
     </article>
 
-    <!-- Theme Toggle -->
+    <!-- Formatting -->
     <article>
-        <h2><i data-lucide="sun-moon"></i> Theme</h2>
+        <h3><i data-lucide="type"></i> Formatting</h3>
+        <p>Date, number, currency, bytes, duration, relative time.</p>
+        <button id="btn-format"><i data-lucide="play"></i> Show All Formats</button>
+        <div id="format-out" class="output">// Click to see formatting examples</div>
+    </article>
+
+    <!-- Utilities -->
+    <article>
+        <h3><i data-lucide="wrench"></i> Utilities</h3>
+        <p><code>uid()</code>, <code>sleep()</code>, <code>debounce()</code>, <code>throttle()</code>, <code>download()</code>, <code>print()</code>.</p>
+        <div class="btns">
+            <button id="btn-uid"><i data-lucide="hash"></i> Generate UID</button>
+            <button id="btn-sleep" class="secondary"><i data-lucide="clock"></i> Sleep 1s</button>
+            <button id="btn-download" class="secondary"><i data-lucide="download"></i> Download</button>
+            <button id="btn-print" class="secondary"><i data-lucide="printer"></i> Print Features</button>
+        </div>
+        <div id="util-out" class="output">// Results appear here</div>
+    </article>
+
+    <!-- Keyboard -->
+    <article>
+        <h3><i data-lucide="keyboard"></i> Keyboard Shortcuts</h3>
+        <p>Global hotkeys with <code>keyboard()</code>.</p>
+        <ul>
+            <li><kbd>Ctrl</kbd>+<kbd>S</kbd> — Save action</li>
+            <li><kbd>Ctrl</kbd>+<kbd>K</kbd> — Toggle theme</li>
+            <li><kbd>Escape</kbd> — Show info toast</li>
+        </ul>
+    </article>
+
+    <!-- Theme -->
+    <article>
+        <h3><i data-lucide="sun-moon"></i> Theme</h3>
+        <p>Auto-detects system preference, persists in storage.</p>
         <fieldset>
-            <label><input type="radio" name="theme" value="light" checked id="theme-light"> Light</label>
-            <label><input type="radio" name="theme" value="dark" id="theme-dark"> Dark</label>
+            <label><input type="radio" name="theme" value="light" id="t-light"> Light</label>
+            <label><input type="radio" name="theme" value="dark" id="t-dark"> Dark</label>
         </fieldset>
+        <small>Current: <strong id="theme-display">light</strong></small>
     </article>
+
 </main>
 
-<footer class="container">
-    <hr>
-    <p><small>QryEnv 1.2 • PicoCSS + Shoelace + Qry.js</small></p>
-</footer>
+<footer>QryEnv 2.0 • Jean-Luc Bloechle & Claude.ai</footer>
 
 <script type="module">
     import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js';
-    import { QryEnv } from './QryEnv.js';
+    import QryEnv from './QryEnv.js';
 
-    class DemoApp extends QryEnv {
+    class Demo extends QryEnv {
         constructor() {
-            super({ title: 'Demo' });
+            super({ title: 'Demo', storagePrefix: 'demo_' });
             this.#init();
         }
 
         #init() {
-            // Toasts
+            // === STATE ===
+            this.set('count', 0);
+            this.watch('count', v => $('#counter').text(`Counter: ${v}`));
+
+            // === TOASTS ===
             this.bindAll({
                 '#btn-success': () => this.success('Operation successful!'),
-                '#btn-error':   () => this.error('Something went wrong!'),
+                '#btn-error': () => this.error('Something went wrong!'),
                 '#btn-warning': () => this.warning('Please be careful!'),
-                '#btn-info':    () => this.info('Here is some info.')
+                '#btn-info': () => this.info('Here is some information.')
             });
 
-            // API
-            this.bind('#btn-api', 'click', async () => {
-                const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3');
-                $('#api-output').text(JSON.stringify(data, null, 2));
-                this.success('Users loaded!');
-            });
+            // === STATE BUTTONS ===
+            this.bind('#btn-inc', 'click', () => this.set('count', this.get('count') + 1));
+            this.bind('#btn-dec', 'click', () => this.set('count', this.get('count') - 1));
+            this.bind('#btn-x2', 'click', () => this.set('count', this.get('count') * 2));
+            this.bind('#btn-reset', 'click', () => this.set('count', 0));
 
-            // Actions
-            this.bind('#btn-action-ok', 'click', () => {
-                this.action('Save document', () => new Promise(r => setTimeout(r, 500)));
-            });
-            this.bind('#btn-action-fail', 'click', () => {
-                this.action('Delete server', () => { throw new Error('Permission denied'); });
-            });
-            this.bind('#btn-action-loading', 'click', () => {
-                this.action('Processing data', () => new Promise(r => setTimeout(r, 1500)), { loading: true });
-            });
-
-            // Confirm & Loading
+            // === DIALOGS ===
             this.bind('#btn-confirm', 'click', async () => {
                 const ok = await this.confirm('Are you sure you want to proceed?');
                 this.info(ok ? 'Confirmed!' : 'Cancelled');
             });
-            this.bind('#btn-confirm-danger', 'click', async () => {
+
+            this.bind('#btn-danger', 'click', async () => {
                 const ok = await this.confirm('Delete all data permanently?', {
                     title: 'Danger Zone',
                     ok: 'Delete',
@@ -329,102 +297,192 @@
                 });
                 if (ok) this.success('Deleted!');
             });
-            this.bind('#btn-loading', 'click', () => {
+
+            this.bind('#btn-loading', 'click', async () => {
                 this.loading(true);
-                setTimeout(() => { this.loading(false); this.success('Done!'); }, 2000);
+                await this.sleep(2000);
+                this.loading(false);
+                this.success('Done!');
             });
 
-            // Storage & Clipboard
-            this.bind('#btn-storage-save', 'click', () => {
-                const val = $('#storage-input').val();
-                this.storage.set('demo', val);
-                this.success('Saved to storage!');
+            this.bind('#btn-modal', 'click', () => this.modal('#demo-modal').show());
+            this.bind('#modal-close', 'click', () => this.modal('#demo-modal').hide());
+            this.bind('#modal-cancel', 'click', () => this.modal('#demo-modal').hide());
+            this.bind('#modal-ok', 'click', () => {
+                this.modal('#demo-modal').hide();
+                this.success('Modal confirmed!');
             });
-            this.bind('#btn-storage-load', 'click', () => {
-                const val = this.storage.get('demo', '(empty)');
+
+            // === API ===
+            this.bind('#btn-api', 'click', async () => {
+                try {
+                    const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3');
+                    $('#api-out').text(JSON.stringify(data.map(u => ({ id: u.id, name: u.name, email: u.email })), null, 2));
+                    this.success('Data loaded!');
+                } catch (e) {
+                    this.error('Failed to load');
+                }
+            });
+
+            this.bind('#btn-api-loading', 'click', async () => {
+                const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3', { loading: true });
+                $('#api-out').text(JSON.stringify(data.map(u => ({ id: u.id, name: u.name })), null, 2));
+            });
+
+            // === ACTIONS ===
+            this.bind('#btn-action-ok', 'click', () => {
+                this.action('Save document', () => this.sleep(500));
+            });
+
+            this.bind('#btn-action-fail', 'click', () => {
+                this.action('Delete server', async () => {
+                    await this.sleep(300);
+                    throw new Error('Permission denied');
+                });
+            });
+
+            this.bind('#btn-action-load', 'click', () => {
+                this.action('Process data', () => this.sleep(1500), { loading: true, toast: 'Processing complete!' });
+            });
+
+            // === FORMS ===
+            this.bind('#demo-form', 'submit', e => {
+                e.preventDefault();
+                $('#err-name').text('');
+                $('#err-email').text('');
+
+                const { valid, errors, data } = this.formValidate('#demo-form', {
+                    name: 'required',
+                    email: v => {
+                        if (!v?.trim()) return 'Email is required';
+                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Invalid email';
+                        return null;
+                    }
+                });
+
+                if (!valid) {
+                    if (errors.name) $('#err-name').text(errors.name);
+                    if (errors.email) $('#err-email').text(errors.email);
+                    this.error('Please fix the errors');
+                    return;
+                }
+
+                this.success(`Submitted: ${data.name} <${data.email}>`);
+                this.formReset('#demo-form');
+            });
+
+            this.bind('#btn-form-reset', 'click', () => {
+                this.formReset('#demo-form');
+                $('#err-name').text('');
+                $('#err-email').text('');
+            });
+
+            // === STORAGE ===
+            this.bind('#btn-save', 'click', () => {
+                this.storage.set('value', $('#storage-input').val());
+                this.success('Saved!');
+            });
+
+            this.bind('#btn-load', 'click', () => {
+                const val = this.storage.get('value', '(empty)');
                 $('#storage-input').val(val);
                 this.info(`Loaded: ${val}`);
             });
+
             this.bind('#btn-copy', 'click', () => {
-                this.copy('Hello from QryEnv! 🚀');
+                this.copy($('#storage-input').val() || 'Hello from QryEnv!');
             });
 
-            // Formatting
+            this.bind('#btn-clear', 'click', async () => {
+                const ok = await this.confirm('Clear all stored data?', { danger: true, ok: 'Clear' });
+                if (ok) {
+                    this.storage.clear();
+                    this.success('Storage cleared!');
+                }
+            });
+
+            // === DROP ZONE ===
+            const dz = $('#dropzone');
+            dz.on('click', () => $('#file-input').el.click());
+            $('#file-input').on('change', e => this.#showFiles(Array.from(e.target.files)));
+
+            this.dropZone('#dropzone', {
+                onEnter: () => dz.cls('+over'),
+                onLeave: () => dz.cls('-over'),
+                onDrop: files => this.#showFiles(files)
+            });
+
+            // === FORMAT ===
             this.bind('#btn-format', 'click', () => {
                 const now = new Date();
-                const results = [
+                const past = Date.now() - 3600000;
+                $('#format-out').text([
                     `date:     ${this.format.date(now)}`,
                     `time:     ${this.format.time(now)}`,
                     `datetime: ${this.format.datetime(now)}`,
                     `number:   ${this.format.number(1234567.89)}`,
-                    `currency: ${this.format.currency(99.90)}`,
+                    `currency: ${this.format.currency(1250.50)}`,
+                    `percent:  ${this.format.percent(0.856, 1)}`,
                     `bytes:    ${this.format.bytes(1536000)}`,
-                    `percent:  ${this.format.percent(0.857, 1)}`,
                     `duration: ${this.format.duration(3661000)}`,
-                    `relative: ${this.format.relative(Date.now() - 3600000)}`
-                ];
-                $('#format-output').text(results.join('\n'));
+                    `relative: ${this.format.relative(past)}`
+                ].join('\n'));
                 this.success('Formats displayed!');
             });
 
-            // Keyboard shortcuts
+            // === UTILITIES ===
+            this.bind('#btn-uid', 'click', () => {
+                const id = this.uid('demo');
+                $('#util-out').text(`Generated UID: ${id}`);
+            });
+
+            this.bind('#btn-sleep', 'click', async () => {
+                $('#util-out').text('Sleeping...');
+                await this.sleep(1000);
+                $('#util-out').text('Woke up after 1 second!');
+                this.success('Awake!');
+            });
+
+            this.bind('#btn-download', 'click', () => {
+                const content = `QryEnv Demo Export\nGenerated: ${new Date().toISOString()}\n\nHello from QryEnv!`;
+                this.download(content, 'qryenv-export.txt');
+                this.success('File downloaded!');
+            });
+
+            this.bind('#btn-print', 'click', () => {
+                this.print('#features', { title: 'QryEnv Features' });
+            });
+
+            // === KEYBOARD ===
             this.keyboard('s', () => this.success('Saved! (Ctrl+S)'), { ctrl: true });
-            this.keyboard('k', () => this.toggleTheme(), { ctrl: true });
+            this.keyboard('k', () => { this.toggleTheme(); this.#syncTheme(); }, { ctrl: true });
             this.keyboard('Escape', () => this.info('Escape pressed!'), { prevent: false });
 
-            // Modal (using helper)
-            this.bind('#btn-modal', 'click', () => this.modal('#demo-modal').show());
-            this.bind('#modal-close', 'click', () => this.modal('#demo-modal').hide());
-            this.bind('#modal-cancel', 'click', () => this.modal('#demo-modal').hide());
-            this.bind('#modal-confirm', 'click', () => {
-                this.modal('#demo-modal').hide();
-                this.success('Confirmed!');
-            });
+            // === THEME ===
+            this.bind('#t-light', 'change', () => { this.setTheme('light'); this.#syncTheme(); });
+            this.bind('#t-dark', 'change', () => { this.setTheme('dark'); this.#syncTheme(); });
+            this.#syncTheme();
 
-            // Progress
-            this.bind('#btn-progress', 'click', () => {
-                let v = 0;
-                const interval = setInterval(() => {
-                    v += 10;
-                    $('#demo-progress').attr('value', v);
-                    if (v >= 100) { clearInterval(interval); this.success('Complete!'); }
-                }, 200);
-            });
+            this.success('Demo ready!');
+        }
 
-            // Form
-            this.bind('#demo-form', 'submit', e => {
-                e.preventDefault();
-                this.success(`Form submitted: ${$('#input-name').val() || 'Anonymous'}`);
-            });
+        #showFiles(files) {
+            if (!files.length) return;
+            $('#files').css('display', 'block').text(
+                files.map(f => `${f.name} (${this.format.bytes(f.size)})`).join('\n')
+            );
+            this.success(`${files.length} file(s) selected`);
+        }
 
-            // Theme (using helper)
-            this.bind('#theme-dark', 'change', () => this.setTheme('dark'));
-            this.bind('#theme-light', 'change', () => this.setTheme('light'));
-
-            // Shoelace switch synced with theme
-            $('#theme-switch').on('sl-change', e => {
-                this.setTheme(e.target.checked ? 'dark' : 'light');
-                $('#theme-dark').el.checked = e.target.checked;
-                $('#theme-light').el.checked = !e.target.checked;
-            });
-
-            // Shoelace dialog
-            $('#btn-sl-dialog').on('click', () => $('#sl-dialog').el.show());
-            $('#btn-sl-dialog-close').on('click', () => {
-                $('#sl-dialog').el.hide();
-                this.success('Dialog closed!');
-            });
-
-            // Shoelace rating
-            $('#demo-rating').on('sl-change', e => {
-                $('#rating-value').text(e.target.value);
-            });
-
-            this.success('App ready!');
+        #syncTheme() {
+            const dark = this.isDark();
+            $('#t-light').el.checked = !dark;
+            $('#t-dark').el.checked = dark;
+            $('#theme-display').text(dark ? 'dark' : 'light');
         }
     }
 
-    $.ready(() => new DemoApp());
+    $.ready(() => new Demo());
 </script>
 </body>
 </html>
