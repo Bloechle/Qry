@@ -3,100 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QryEnv 2.0 - Demo</title>
+    <title>QryEnv 2.0 Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        :root { --pico-primary: #00205B; --pico-primary-hover: #001845; }
+        /*
+         * ============================================
+         * QryEnv 2.0 Base Styles
+         * Use this as template for webapps
+         * ============================================
+         */
+        :root {
+            --unifr-blue: #005395;
+        }
 
-        /* Header */
-        header.app-header { background: linear-gradient(135deg, #00205B, #0047AB, #00205B); color: #fff; padding: 1rem 0; }
-        header.app-header nav { margin: 0; padding: 0 1rem; }
-        header.app-header a, header.app-header strong { color: #fff; }
-        header.app-header [role=button] { --pico-background-color: #fff; --pico-border-color: #fff; color: #00205B; }
+        * { box-sizing: border-box; }
+        body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
 
-        /* Buttons */
-        .btns { display: flex; flex-wrap: wrap; gap: .5rem; }
+        /* === HEADER (minimal, always white text) === */
+        header {
+            background: var(--unifr-blue);
+            color: white !important;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 { margin: 0; font-size: 1.1rem; font-weight: 600; color: white !important; }
+        header a { color: white !important; opacity: 0.8; text-decoration: none; font-size: 0.85rem; }
+        header a:hover { opacity: 1; }
+        .header-right { display: flex; align-items: center; gap: 0.5rem; }
+        .header-right button {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white !important;
+            padding: 0.4rem;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header-right button:hover { background: rgba(255,255,255,0.25); }
+        .header-right button i { width: 1.1rem; height: 1.1rem; }
+
+        /* === MAIN === */
+        main { flex: 1; padding: 1rem; max-width: 900px; margin: 0 auto; width: 100%; }
+
+        /* === FOOTER === */
+        footer {
+            text-align: center;
+            padding: 0.5rem;
+            color: var(--pico-muted-color);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--pico-muted-border-color);
+        }
+
+        /* === BUTTONS === */
+        .btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .btns button { margin: 0; }
         button.success { --pico-background-color: var(--qry-success); --pico-border-color: var(--qry-success); }
         button.warning { --pico-background-color: var(--qry-warning); --pico-border-color: var(--qry-warning); }
         button.danger { --pico-background-color: var(--qry-error); --pico-border-color: var(--qry-error); }
 
-        /* Output */
-        .output { background: var(--qry-surface); border: 1px solid var(--qry-border); border-radius: 1rem; padding: 1rem; font-family: monospace; font-size: .85rem; margin-top: 1rem; white-space: pre-wrap; min-height: 2rem; }
+        /* === OUTPUT BOX === */
+        .output {
+            background: var(--pico-card-background-color);
+            border: 1px solid var(--pico-muted-border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            white-space: pre-wrap;
+            min-height: 2rem;
+        }
 
-        /* Dropzone */
-        .dropzone { border: 2px dashed var(--qry-border); border-radius: 1rem; padding: 2rem; text-align: center; cursor: pointer; transition: .2s; }
-        .dropzone:hover, .dropzone.over { border-color: var(--qry-primary); background: rgba(0,32,91,.05); }
-        .dropzone i { width: 3rem; height: 3rem; color: var(--qry-muted); }
+        /* === DROPZONE === */
+        .dropzone {
+            border: 2px dashed var(--pico-muted-border-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dropzone:hover, .dropzone.over {
+            border-color: var(--unifr-blue);
+            background: rgba(0,83,149,0.05);
+        }
+        .dropzone i { width: 2.5rem; height: 2.5rem; color: var(--pico-muted-color); }
 
-        /* Form validation */
-        .field-error { color: var(--qry-error); font-size: .85rem; margin-top: .25rem; }
+        /* === FORM ERRORS === */
+        .field-error { color: var(--qry-error); font-size: 0.8rem; margin-top: 0.25rem; }
 
-        /* Misc */
-        kbd { background: var(--qry-surface); border: 1px solid var(--qry-border); border-radius: .5rem; padding: .1rem .5rem; font-size: .85rem; }
-        footer { text-align: center; padding: 2rem; color: var(--qry-muted); }
-        article h3 { display: flex; align-items: center; gap: .5rem; }
-        article h3 i { width: 1.25rem; height: 1.25rem; }
-        .grid-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: .5rem; text-align: center; margin-bottom: 1rem; }
-        .grid-features div { padding: .75rem; background: var(--qry-surface); border: 1px solid var(--qry-border); border-radius: 1rem; }
-        .grid-features i { color: var(--qry-primary); }
-        .grid-features small { display: block; color: var(--qry-muted); }
+        /* === SECTIONS === */
+        article { margin-bottom: 1.5rem; }
+        article h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; margin-bottom: 0.5rem; }
+        article h3 i { width: 1.1rem; height: 1.1rem; color: var(--unifr-blue); }
+        article p { font-size: 0.9rem; color: var(--pico-muted-color); margin-bottom: 0.75rem; }
+
+        /* === FEATURES GRID === */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .features > div {
+            padding: 0.75rem 0.5rem;
+            background: var(--pico-card-background-color);
+            border: 1px solid var(--pico-muted-border-color);
+            border-radius: 0.75rem;
+        }
+        .features i { color: var(--unifr-blue); width: 1.25rem; height: 1.25rem; }
+        .features small { display: block; color: var(--pico-muted-color); font-size: 0.75rem; margin-top: 0.25rem; }
+
+        /* === KBD === */
+        kbd {
+            background: var(--pico-card-background-color);
+            border: 1px solid var(--pico-muted-border-color);
+            border-radius: 0.4rem;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        /* === UTILITIES === */
+        .hide { display: none !important; }
     </style>
 </head>
 <body>
 
-<header class="container-fluid app-header">
-    <nav class="container">
-        <ul><li><strong><i data-lucide="zap"></i> QryEnv 2.0</strong></li></ul>
-        <ul>
-            <li><a href="#features">Features</a></li>
-            <li><a href="https://github.com/Bloechle/qry" role="button">GitHub</a></li>
-        </ul>
-    </nav>
+<header>
+    <h1>⚡ QryEnv 2.0</h1>
+    <div class="header-right">
+        <a href="https://github.com/Bloechle/qry" target="_blank">GitHub</a>
+        <button id="btn-print" title="Print"><i data-lucide="printer"></i></button>
+        <button id="btn-theme" title="Toggle theme (Ctrl+K)"><i data-lucide="moon"></i></button>
+    </div>
 </header>
 
-<main class="container">
-    <hgroup>
-        <h1>QryEnv 2.0</h1>
-        <p>Generic webapp bootstrapper • Qry.js + PicoCSS + Lucide</p>
-    </hgroup>
-
-    <!-- Features Overview -->
-    <section id="features">
-        <div class="grid-features">
-            <div><i data-lucide="bell"></i><small>Toast</small></div>
-            <div><i data-lucide="database"></i><small>State</small></div>
-            <div><i data-lucide="moon"></i><small>Theme</small></div>
-            <div><i data-lucide="hard-drive"></i><small>Storage</small></div>
-            <div><i data-lucide="keyboard"></i><small>Hotkeys</small></div>
-            <div><i data-lucide="cloud"></i><small>API</small></div>
-            <div><i data-lucide="check-square"></i><small>Forms</small></div>
-            <div><i data-lucide="upload"></i><small>Drop</small></div>
-        </div>
-    </section>
+<main>
+    <!-- Features -->
+    <div class="features">
+        <div><i data-lucide="bell"></i><small>Toast</small></div>
+        <div><i data-lucide="database"></i><small>State</small></div>
+        <div><i data-lucide="moon"></i><small>Theme</small></div>
+        <div><i data-lucide="hard-drive"></i><small>Storage</small></div>
+        <div><i data-lucide="keyboard"></i><small>Hotkeys</small></div>
+        <div><i data-lucide="cloud"></i><small>API</small></div>
+        <div><i data-lucide="check-square"></i><small>Forms</small></div>
+        <div><i data-lucide="upload"></i><small>Drop</small></div>
+    </div>
 
     <!-- Toast -->
     <article>
-        <h3><i data-lucide="bell"></i> Toast Notifications</h3>
+        <h3><i data-lucide="bell"></i> Toast</h3>
         <p>4 notification types with auto-dismiss.</p>
         <div class="btns">
-            <button id="btn-success" class="success"><i data-lucide="check"></i> Success</button>
-            <button id="btn-error" class="danger"><i data-lucide="x"></i> Error</button>
-            <button id="btn-warning" class="warning"><i data-lucide="alert-triangle"></i> Warning</button>
-            <button id="btn-info"><i data-lucide="info"></i> Info</button>
+            <button id="btn-success" class="success">Success</button>
+            <button id="btn-error" class="danger">Error</button>
+            <button id="btn-warning" class="warning">Warning</button>
+            <button id="btn-info">Info</button>
         </div>
     </article>
 
     <!-- State -->
     <article>
-        <h3><i data-lucide="database"></i> Reactive State</h3>
-        <p>Simple state with <code>get()</code>, <code>set()</code>, <code>watch()</code>, <code>update()</code>.</p>
+        <h3><i data-lucide="database"></i> State</h3>
+        <p>Reactive state with <code>get()</code>, <code>set()</code>, <code>watch()</code>.</p>
         <div class="btns">
-            <button id="btn-inc"><i data-lucide="plus"></i> +1</button>
-            <button id="btn-dec"><i data-lucide="minus"></i> -1</button>
-            <button id="btn-x2" class="secondary"><i data-lucide="x"></i> ×2</button>
-            <button id="btn-reset" class="secondary"><i data-lucide="rotate-ccw"></i> Reset</button>
+            <button id="btn-inc">+1</button>
+            <button id="btn-dec">-1</button>
+            <button id="btn-x2" class="secondary">×2</button>
+            <button id="btn-reset" class="secondary">Reset</button>
         </div>
         <div id="counter" class="output">Counter: 0</div>
     </article>
@@ -104,23 +186,22 @@
     <!-- Dialogs -->
     <article>
         <h3><i data-lucide="message-square"></i> Dialogs</h3>
-        <p>Built-in confirm dialog, loading overlay, and modal helper.</p>
+        <p>Confirm, loading overlay, and modal helper.</p>
         <div class="btns">
-            <button id="btn-confirm"><i data-lucide="help-circle"></i> Confirm</button>
-            <button id="btn-danger" class="danger"><i data-lucide="trash-2"></i> Danger Confirm</button>
-            <button id="btn-loading" class="secondary"><i data-lucide="loader"></i> Loading 2s</button>
-            <button id="btn-modal" class="secondary"><i data-lucide="maximize-2"></i> Custom Modal</button>
+            <button id="btn-confirm">Confirm</button>
+            <button id="btn-danger" class="danger">Danger</button>
+            <button id="btn-loading" class="secondary">Loading 2s</button>
+            <button id="btn-modal" class="secondary">Modal</button>
         </div>
     </article>
 
-    <!-- Custom Modal -->
     <dialog id="demo-modal">
         <article>
             <header>
                 <button aria-label="Close" rel="prev" id="modal-close"></button>
                 <h3>Custom Modal</h3>
             </header>
-            <p>This is a custom modal using the <code>modal()</code> helper with PicoCSS styling.</p>
+            <p>PicoCSS dialog with <code>modal()</code> helper.</p>
             <footer>
                 <button id="modal-cancel" class="secondary">Cancel</button>
                 <button id="modal-ok">OK</button>
@@ -130,30 +211,30 @@
 
     <!-- API -->
     <article>
-        <h3><i data-lucide="cloud"></i> API Helper</h3>
-        <p>Fetch JSON with optional loading overlay.</p>
+        <h3><i data-lucide="cloud"></i> API</h3>
+        <p>Fetch JSON with optional loading.</p>
         <div class="btns">
-            <button id="btn-api"><i data-lucide="download"></i> Fetch Users</button>
-            <button id="btn-api-loading" class="secondary"><i data-lucide="loader"></i> With Loading</button>
+            <button id="btn-api">Fetch Users</button>
+            <button id="btn-api-loading" class="secondary">With Loading</button>
         </div>
-        <div id="api-out" class="output">// Click to fetch data</div>
+        <div id="api-out" class="output">// Click to fetch</div>
     </article>
 
     <!-- Actions -->
     <article>
         <h3><i data-lucide="play"></i> Actions</h3>
-        <p>Wrap async operations with automatic toast and loading.</p>
+        <p>Wrap async ops with toast and loading.</p>
         <div class="btns">
-            <button id="btn-action-ok"><i data-lucide="check-circle"></i> Success</button>
-            <button id="btn-action-fail" class="danger"><i data-lucide="x-circle"></i> Fail</button>
-            <button id="btn-action-load" class="secondary"><i data-lucide="loader"></i> With Loading</button>
+            <button id="btn-action-ok">Success</button>
+            <button id="btn-action-fail" class="danger">Fail</button>
+            <button id="btn-action-load" class="secondary">With Loading</button>
         </div>
     </article>
 
     <!-- Forms -->
     <article>
-        <h3><i data-lucide="check-square"></i> Form Validation</h3>
-        <p>Extract data and validate with <code>formData()</code>, <code>formValidate()</code>.</p>
+        <h3><i data-lucide="check-square"></i> Forms</h3>
+        <p>Validate with <code>formValidate()</code>.</p>
         <form id="demo-form">
             <div class="grid">
                 <label>
@@ -167,12 +248,8 @@
                     <div id="err-email" class="field-error"></div>
                 </label>
             </div>
-            <label>
-                Message
-                <textarea name="message" placeholder="Optional message"></textarea>
-            </label>
             <div class="btns">
-                <button type="submit"><i data-lucide="send"></i> Submit</button>
+                <button type="submit">Submit</button>
                 <button type="button" id="btn-form-reset" class="secondary">Reset</button>
             </div>
         </form>
@@ -180,82 +257,78 @@
 
     <!-- Storage -->
     <article>
-        <h3><i data-lucide="hard-drive"></i> Storage & Clipboard</h3>
-        <p>Prefixed localStorage wrapper and clipboard helper.</p>
+        <h3><i data-lucide="hard-drive"></i> Storage</h3>
+        <p>LocalStorage with JSON support.</p>
         <div class="grid">
             <input type="text" id="storage-input" placeholder="Type something...">
         </div>
         <div class="btns">
-            <button id="btn-save"><i data-lucide="save"></i> Save</button>
-            <button id="btn-load" class="secondary"><i data-lucide="download"></i> Load</button>
-            <button id="btn-copy" class="secondary"><i data-lucide="copy"></i> Copy</button>
-            <button id="btn-clear" class="danger"><i data-lucide="trash-2"></i> Clear All</button>
+            <button id="btn-save">Save</button>
+            <button id="btn-load" class="secondary">Load</button>
+            <button id="btn-copy" class="secondary">Copy</button>
+            <button id="btn-clear-storage" class="danger">Clear All</button>
         </div>
     </article>
 
     <!-- Drop Zone -->
     <article>
-        <h3><i data-lucide="upload"></i> Drag & Drop</h3>
-        <p>File drop zone with <code>dropZone()</code> helper.</p>
+        <h3><i data-lucide="upload"></i> Drop Zone</h3>
+        <p>Drag & drop file handling.</p>
         <div id="dropzone" class="dropzone">
-            <i data-lucide="upload-cloud"></i>
-            <p><strong>Drop files here</strong></p>
-            <small>or click to browse</small>
+            <i data-lucide="cloud-upload"></i>
+            <p>Drop files or click to browse</p>
             <input type="file" id="file-input" multiple hidden>
         </div>
-        <div id="files" class="output" style="display:none"></div>
+        <div id="files" class="output hide"></div>
     </article>
 
-    <!-- Formatting -->
+    <!-- Format -->
     <article>
         <h3><i data-lucide="type"></i> Formatting</h3>
-        <p>Date, number, currency, bytes, duration, relative time.</p>
-        <button id="btn-format"><i data-lucide="play"></i> Show All Formats</button>
-        <div id="format-out" class="output">// Click to see formatting examples</div>
+        <p>Date, number, currency, duration formatters.</p>
+        <button id="btn-format">Show Formats</button>
+        <div id="format-out" class="output">// Click to see formats</div>
     </article>
 
     <!-- Utilities -->
     <article>
         <h3><i data-lucide="wrench"></i> Utilities</h3>
-        <p><code>uid()</code>, <code>sleep()</code>, <code>debounce()</code>, <code>throttle()</code>, <code>download()</code>, <code>print()</code>.</p>
+        <p>UID, sleep, download, debounce, throttle.</p>
         <div class="btns">
-            <button id="btn-uid"><i data-lucide="hash"></i> Generate UID</button>
-            <button id="btn-sleep" class="secondary"><i data-lucide="clock"></i> Sleep 1s</button>
-            <button id="btn-download" class="secondary"><i data-lucide="download"></i> Download</button>
-            <button id="btn-print" class="secondary"><i data-lucide="printer"></i> Print Features</button>
+            <button id="btn-uid">Generate UID</button>
+            <button id="btn-sleep" class="secondary">Sleep 1s</button>
+            <button id="btn-download" class="secondary">Download</button>
         </div>
-        <div id="util-out" class="output">// Results appear here</div>
+        <div id="util-out" class="output">// Output here</div>
     </article>
 
     <!-- Keyboard -->
     <article>
-        <h3><i data-lucide="keyboard"></i> Keyboard Shortcuts</h3>
-        <p>Global hotkeys with <code>keyboard()</code>.</p>
+        <h3><i data-lucide="keyboard"></i> Keyboard</h3>
+        <p>Global shortcuts with <code>keyboard()</code>.</p>
         <ul>
-            <li><kbd>Ctrl</kbd>+<kbd>S</kbd> — Save action</li>
-            <li><kbd>Ctrl</kbd>+<kbd>K</kbd> — Toggle theme</li>
-            <li><kbd>Escape</kbd> — Show info toast</li>
+            <li><kbd>Ctrl+S</kbd> Save action</li>
+            <li><kbd>Ctrl+K</kbd> Toggle theme</li>
+            <li><kbd>Escape</kbd> Info toast</li>
         </ul>
     </article>
 
     <!-- Theme -->
     <article>
-        <h3><i data-lucide="sun-moon"></i> Theme</h3>
-        <p>Auto-detects system preference, persists in storage.</p>
+        <h3><i data-lucide="moon"></i> Theme</h3>
+        <p>Auto-saved to localStorage.</p>
         <fieldset>
-            <label><input type="radio" name="theme" value="light" id="t-light"> Light</label>
-            <label><input type="radio" name="theme" value="dark" id="t-dark"> Dark</label>
+            <label><input type="radio" name="theme" id="t-light" checked> Light</label>
+            <label><input type="radio" name="theme" id="t-dark"> Dark</label>
         </fieldset>
-        <small>Current: <strong id="theme-display">light</strong></small>
     </article>
-
 </main>
 
-<footer>QryEnv 2.0 • Jean-Luc Bloechle & Claude.ai</footer>
+<footer>Jean-Luc Bloechle & Claude.ai</footer>
 
 <script type="module">
     import $ from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/Qry.js';
-    import QryEnv from './QryEnv.js';
+    import { QryEnv } from 'https://cdn.jsdelivr.net/gh/Bloechle/qry@latest/QryEnv.js';
 
     class Demo extends QryEnv {
         constructor() {
@@ -264,221 +337,142 @@
         }
 
         #init() {
-            // === STATE ===
-            this.set('count', 0);
-            this.watch('count', v => $('#counter').text(`Counter: ${v}`));
+            // State
+            this.set('counter', 0);
+            this.watch('counter', v => $('#counter').text(`Counter: ${v}`));
 
-            // === TOASTS ===
+            // Theme sync
+            this.#syncTheme();
+
+            // Bindings
             this.bindAll({
+                '#btn-theme': () => { this.toggleTheme(); this.#syncTheme(); },
+                '#btn-print': () => window.print(),
                 '#btn-success': () => this.success('Operation successful!'),
                 '#btn-error': () => this.error('Something went wrong!'),
                 '#btn-warning': () => this.warning('Please be careful!'),
-                '#btn-info': () => this.info('Here is some information.')
+                '#btn-info': () => this.info('Here is some info.'),
+                '#btn-inc': () => this.set('counter', this.get('counter') + 1),
+                '#btn-dec': () => this.set('counter', this.get('counter') - 1),
+                '#btn-x2': () => this.set('counter', this.get('counter') * 2),
+                '#btn-reset': () => this.set('counter', 0),
+                '#btn-confirm': async () => {
+                    const ok = await this.confirm('Are you sure?');
+                    this.info(ok ? 'Confirmed!' : 'Cancelled');
+                },
+                '#btn-danger': async () => {
+                    const ok = await this.confirm('Delete everything?', { danger: true, title: 'Warning', ok: 'Delete' });
+                    if (ok) this.success('Deleted!');
+                },
+                '#btn-loading': async () => {
+                    this.loading(true);
+                    await this.sleep(2000);
+                    this.loading(false);
+                    this.success('Done!');
+                },
+                '#btn-modal': () => this.modal('#demo-modal').show(),
+                '#modal-close': () => this.modal('#demo-modal').hide(),
+                '#modal-cancel': () => this.modal('#demo-modal').hide(),
+                '#modal-ok': () => { this.modal('#demo-modal').hide(); this.success('Modal confirmed!'); },
+                '#btn-api': async () => {
+                    try {
+                        const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3');
+                        $('#api-out').text(JSON.stringify(data.map(u => ({ id: u.id, name: u.name })), null, 2));
+                        this.success('Loaded!');
+                    } catch { this.error('Failed'); }
+                },
+                '#btn-api-loading': async () => {
+                    const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3', { loading: true });
+                    $('#api-out').text(JSON.stringify(data.map(u => ({ id: u.id, name: u.name })), null, 2));
+                },
+                '#btn-action-ok': () => this.action('Save', () => this.sleep(500)),
+                '#btn-action-fail': () => this.action('Delete', async () => { await this.sleep(300); throw new Error('Denied'); }),
+                '#btn-action-load': () => this.action('Process', () => this.sleep(1500), { loading: true }),
+                '#btn-form-reset': () => { this.formReset('#demo-form'); $('#err-name, #err-email').text(''); },
+                '#btn-save': () => { this.storage.set('value', $('#storage-input').val()); this.success('Saved!'); },
+                '#btn-load': () => { $('#storage-input').val(this.storage.get('value', '')); this.info('Loaded'); },
+                '#btn-copy': () => this.copy($('#storage-input').val() || 'Hello!'),
+                '#btn-clear-storage': async () => {
+                    if (await this.confirm('Clear all storage?', { danger: true })) {
+                        this.storage.clear();
+                        this.success('Cleared!');
+                    }
+                },
+                '#btn-format': () => {
+                    const now = new Date();
+                    $('#format-out').text([
+                        `date:     ${this.format.date(now)}`,
+                        `time:     ${this.format.time(now)}`,
+                        `datetime: ${this.format.datetime(now)}`,
+                        `number:   ${this.format.number(1234567.89)}`,
+                        `currency: ${this.format.currency(1250.50)}`,
+                        `percent:  ${this.format.percent(0.856, 1)}`,
+                        `bytes:    ${this.format.bytes(1536000)}`,
+                        `duration: ${this.format.duration(3661000)}`,
+                        `relative: ${this.format.relative(Date.now() - 3600000)}`
+                    ].join('\n'));
+                },
+                '#btn-uid': () => $('#util-out').text(`UID: ${this.uid('demo')}`),
+                '#btn-sleep': async () => {
+                    $('#util-out').text('Sleeping...');
+                    await this.sleep(1000);
+                    $('#util-out').text('Awake!');
+                },
+                '#btn-download': () => {
+                    this.download(`QryEnv Export\n${new Date().toISOString()}`, 'export.txt');
+                    this.success('Downloaded!');
+                },
+                '#t-light': () => { this.setTheme('light'); this.#syncTheme(); },
+                '#t-dark': () => { this.setTheme('dark'); this.#syncTheme(); }
             });
 
-            // === STATE BUTTONS ===
-            this.bind('#btn-inc', 'click', () => this.set('count', this.get('count') + 1));
-            this.bind('#btn-dec', 'click', () => this.set('count', this.get('count') - 1));
-            this.bind('#btn-x2', 'click', () => this.set('count', this.get('count') * 2));
-            this.bind('#btn-reset', 'click', () => this.set('count', 0));
-
-            // === DIALOGS ===
-            this.bind('#btn-confirm', 'click', async () => {
-                const ok = await this.confirm('Are you sure you want to proceed?');
-                this.info(ok ? 'Confirmed!' : 'Cancelled');
-            });
-
-            this.bind('#btn-danger', 'click', async () => {
-                const ok = await this.confirm('Delete all data permanently?', {
-                    title: 'Danger Zone',
-                    ok: 'Delete',
-                    cancel: 'Keep',
-                    danger: true
-                });
-                if (ok) this.success('Deleted!');
-            });
-
-            this.bind('#btn-loading', 'click', async () => {
-                this.loading(true);
-                await this.sleep(2000);
-                this.loading(false);
-                this.success('Done!');
-            });
-
-            this.bind('#btn-modal', 'click', () => this.modal('#demo-modal').show());
-            this.bind('#modal-close', 'click', () => this.modal('#demo-modal').hide());
-            this.bind('#modal-cancel', 'click', () => this.modal('#demo-modal').hide());
-            this.bind('#modal-ok', 'click', () => {
-                this.modal('#demo-modal').hide();
-                this.success('Modal confirmed!');
-            });
-
-            // === API ===
-            this.bind('#btn-api', 'click', async () => {
-                try {
-                    const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3');
-                    $('#api-out').text(JSON.stringify(data.map(u => ({ id: u.id, name: u.name, email: u.email })), null, 2));
-                    this.success('Data loaded!');
-                } catch (e) {
-                    this.error('Failed to load');
-                }
-            });
-
-            this.bind('#btn-api-loading', 'click', async () => {
-                const data = await this.api('https://jsonplaceholder.typicode.com/users?_limit=3', { loading: true });
-                $('#api-out').text(JSON.stringify(data.map(u => ({ id: u.id, name: u.name })), null, 2));
-            });
-
-            // === ACTIONS ===
-            this.bind('#btn-action-ok', 'click', () => {
-                this.action('Save document', () => this.sleep(500));
-            });
-
-            this.bind('#btn-action-fail', 'click', () => {
-                this.action('Delete server', async () => {
-                    await this.sleep(300);
-                    throw new Error('Permission denied');
-                });
-            });
-
-            this.bind('#btn-action-load', 'click', () => {
-                this.action('Process data', () => this.sleep(1500), { loading: true, toast: 'Processing complete!' });
-            });
-
-            // === FORMS ===
+            // Form submit
             this.bind('#demo-form', 'submit', e => {
                 e.preventDefault();
-                $('#err-name').text('');
-                $('#err-email').text('');
-
+                $('#err-name, #err-email').text('');
                 const { valid, errors, data } = this.formValidate('#demo-form', {
                     name: 'required',
-                    email: v => {
-                        if (!v?.trim()) return 'Email is required';
-                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Invalid email';
-                        return null;
-                    }
+                    email: v => !v?.trim() ? 'Required' : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? 'Invalid' : null
                 });
-
                 if (!valid) {
                     if (errors.name) $('#err-name').text(errors.name);
                     if (errors.email) $('#err-email').text(errors.email);
-                    this.error('Please fix the errors');
-                    return;
+                    return this.error('Fix errors');
                 }
-
-                this.success(`Submitted: ${data.name} <${data.email}>`);
+                this.success(`Submitted: ${data.name}`);
                 this.formReset('#demo-form');
             });
 
-            this.bind('#btn-form-reset', 'click', () => {
-                this.formReset('#demo-form');
-                $('#err-name').text('');
-                $('#err-email').text('');
-            });
-
-            // === STORAGE ===
-            this.bind('#btn-save', 'click', () => {
-                this.storage.set('value', $('#storage-input').val());
-                this.success('Saved!');
-            });
-
-            this.bind('#btn-load', 'click', () => {
-                const val = this.storage.get('value', '(empty)');
-                $('#storage-input').val(val);
-                this.info(`Loaded: ${val}`);
-            });
-
-            this.bind('#btn-copy', 'click', () => {
-                this.copy($('#storage-input').val() || 'Hello from QryEnv!');
-            });
-
-            this.bind('#btn-clear', 'click', async () => {
-                const ok = await this.confirm('Clear all stored data?', { danger: true, ok: 'Clear' });
-                if (ok) {
-                    this.storage.clear();
-                    this.success('Storage cleared!');
-                }
-            });
-
-            // === DROP ZONE ===
+            // Drop zone
             const dz = $('#dropzone');
             dz.on('click', () => $('#file-input').el.click());
             $('#file-input').on('change', e => this.#showFiles(Array.from(e.target.files)));
-
             this.dropZone('#dropzone', {
                 onEnter: () => dz.cls('+over'),
                 onLeave: () => dz.cls('-over'),
                 onDrop: files => this.#showFiles(files)
             });
 
-            // === FORMAT ===
-            this.bind('#btn-format', 'click', () => {
-                const now = new Date();
-                const past = Date.now() - 3600000;
-                $('#format-out').text([
-                    `date:     ${this.format.date(now)}`,
-                    `time:     ${this.format.time(now)}`,
-                    `datetime: ${this.format.datetime(now)}`,
-                    `number:   ${this.format.number(1234567.89)}`,
-                    `currency: ${this.format.currency(1250.50)}`,
-                    `percent:  ${this.format.percent(0.856, 1)}`,
-                    `bytes:    ${this.format.bytes(1536000)}`,
-                    `duration: ${this.format.duration(3661000)}`,
-                    `relative: ${this.format.relative(past)}`
-                ].join('\n'));
-                this.success('Formats displayed!');
-            });
-
-            // === UTILITIES ===
-            this.bind('#btn-uid', 'click', () => {
-                const id = this.uid('demo');
-                $('#util-out').text(`Generated UID: ${id}`);
-            });
-
-            this.bind('#btn-sleep', 'click', async () => {
-                $('#util-out').text('Sleeping...');
-                await this.sleep(1000);
-                $('#util-out').text('Woke up after 1 second!');
-                this.success('Awake!');
-            });
-
-            this.bind('#btn-download', 'click', () => {
-                const content = `QryEnv Demo Export\nGenerated: ${new Date().toISOString()}\n\nHello from QryEnv!`;
-                this.download(content, 'qryenv-export.txt');
-                this.success('File downloaded!');
-            });
-
-            this.bind('#btn-print', 'click', () => {
-                this.print('#features', { title: 'QryEnv Features' });
-            });
-
-            // === KEYBOARD ===
+            // Keyboard
             this.keyboard('s', () => this.success('Saved! (Ctrl+S)'), { ctrl: true });
             this.keyboard('k', () => { this.toggleTheme(); this.#syncTheme(); }, { ctrl: true });
-            this.keyboard('Escape', () => this.info('Escape pressed!'), { prevent: false });
-
-            // === THEME ===
-            this.bind('#t-light', 'change', () => { this.setTheme('light'); this.#syncTheme(); });
-            this.bind('#t-dark', 'change', () => { this.setTheme('dark'); this.#syncTheme(); });
-            this.#syncTheme();
+            this.keyboard('Escape', () => this.info('Escape!'), { prevent: false });
 
             this.success('Demo ready!');
         }
 
         #showFiles(files) {
             if (!files.length) return;
-            $('#files').css('display', 'block').text(
-                files.map(f => `${f.name} (${this.format.bytes(f.size)})`).join('\n')
-            );
-            this.success(`${files.length} file(s) selected`);
+            $('#files').cls('-hide').text(files.map(f => `${f.name} (${this.format.bytes(f.size)})`).join('\n'));
+            this.success(`${files.length} file(s)`);
         }
 
         #syncTheme() {
             const dark = this.isDark();
             $('#t-light').el.checked = !dark;
             $('#t-dark').el.checked = dark;
-            $('#theme-display').text(dark ? 'dark' : 'light');
+            $('#btn-theme').html(`<i data-lucide="${dark ? 'sun' : 'moon'}"></i>`);
+            this.icons();
         }
     }
 

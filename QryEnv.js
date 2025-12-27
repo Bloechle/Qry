@@ -24,7 +24,7 @@ export class QryEnv {
             title: 'QryEnv',
             logLevel: 'info',
             toastDuration: 3000,
-            primaryColor: '#00205B',
+            primaryColor: '#005395',
             storagePrefix: 'qry_',
             ...config
         };
